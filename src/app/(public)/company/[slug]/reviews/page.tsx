@@ -64,15 +64,23 @@ export default async function AllReviewsPage({ params, searchParams }: Props) {
       association_type, reviewer_role, engagement_phase, association_duration,
       is_anonymous, is_verified_buyer, helpful_votes, created_at,
       users(display_name, avatar_url),
-      products_services(name),
-      review_responses(content, created_at)
+      products_services(name)
     `, { count: 'exact' })
     .eq('company_id', company.id)
     .eq('status', 'published')
     .order('created_at', { ascending: false })
     .range(from, to)
 
-  const reviews = (rawReviews ?? []) as any[]
+  const reviewIds = ((rawReviews ?? []) as any[]).map((r: any) => r.id)
+  const { data: rawResponses } = reviewIds.length > 0
+    ? await supabase.from('review_responses').select('review_id, content, created_at').in('review_id', reviewIds)
+    : { data: [] }
+  const responsesByReviewId = Object.fromEntries(((rawResponses ?? []) as any[]).map(r => [r.review_id, r]))
+
+  const reviews = ((rawReviews ?? []) as any[]).map(r => ({
+    ...r,
+    review_responses: responsesByReviewId[r.id] ? [responsesByReviewId[r.id]] : [],
+  }))
   const totalPages = Math.ceil((count ?? company.total_reviews) / PER_PAGE)
 
   return (

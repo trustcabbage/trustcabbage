@@ -92,8 +92,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     is_anonymous, is_verified_buyer, helpful_votes, created_at,
     users(display_name, avatar_url),
     products_services(name),
-    review_product_services(products_services(id, name)),
-    review_responses(content, created_at)
+    review_product_services(products_services(id, name))
   `
 
   let rawReviews: any[] = []
@@ -120,8 +119,26 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     rawReviews = (data ?? []) as any[]
   }
 
-  // Fetch review tags for all fetched reviews in one query
+  // Fetch review responses separately (avoids PostgREST embedded join cache issues)
   const fetchedReviewIds = rawReviews.map(r => r.id)
+  const { data: rawResponses } = fetchedReviewIds.length > 0
+    ? await supabase
+        .from('review_responses')
+        .select('review_id, content, created_at')
+        .in('review_id', fetchedReviewIds)
+    : { data: [] }
+
+  const responsesByReviewId = Object.fromEntries(
+    ((rawResponses ?? []) as any[]).map(r => [r.review_id, r])
+  )
+
+  // Attach responses to reviews
+  rawReviews = rawReviews.map(r => ({
+    ...r,
+    review_responses: responsesByReviewId[r.id] ? [responsesByReviewId[r.id]] : [],
+  }))
+
+  // Fetch review tags for all fetched reviews in one query
   const { data: rawReviewTags } = fetchedReviewIds.length > 0
     ? await supabase
         .from('review_tags')
