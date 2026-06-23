@@ -12,6 +12,7 @@ export function LoginForm({ next = '/' }: { next?: string }) {
   const [otp, setOtp] = useState('')
   const [step, setStep] = useState<'email' | 'otp'>('email')
   const [loading, setLoading] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
   const router = useRouter()
   const supabase = createClient()
 
@@ -19,15 +20,36 @@ export function LoginForm({ next = '/' }: { next?: string }) {
     setLoading(true)
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
+      options: { shouldCreateUser: true },
     })
     setLoading(false)
     if (error) { toast.error(error.message); return }
     toast.success('Check your email for the 6-digit code')
     setStep('otp')
+    startResendCooldown()
+  }
+
+  function startResendCooldown() {
+    setResendCooldown(30)
+    const interval = setInterval(() => {
+      setResendCooldown(prev => {
+        if (prev <= 1) { clearInterval(interval); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  async function resendOtp() {
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true },
+    })
+    setLoading(false)
+    if (error) { toast.error(error.message); return }
+    toast.success('New code sent — check your inbox')
+    setOtp('')
+    startResendCooldown()
   }
 
   async function verifyOtp() {
@@ -58,19 +80,29 @@ export function LoginForm({ next = '/' }: { next?: string }) {
 
         {step === 'otp' && (
           <div className="space-y-1.5">
-            <Label htmlFor="otp" className="text-slate-300 text-sm font-bold">6-digit code</Label>
+            <Label htmlFor="otp" className="text-slate-300 text-sm font-bold">Sign-in code</Label>
             <Input
               id="otp"
               type="text"
               inputMode="numeric"
-              placeholder="123456"
+              placeholder="········"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              maxLength={6}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+              maxLength={8}
               required
               className="bg-white/10 border-white/20 text-white placeholder:text-slate-500 focus:border-violet-500 tracking-widest text-center text-lg"
             />
-            <p className="text-xs text-slate-500">Or click the link in the email to sign in automatically.</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-slate-500">Code expires in 10 minutes.</p>
+              <button
+                type="button"
+                disabled={resendCooldown > 0 || loading}
+                onClick={resendOtp}
+                className="text-xs font-black text-violet-400 hover:text-violet-200 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+              >
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
+              </button>
+            </div>
           </div>
         )}
 

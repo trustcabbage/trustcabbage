@@ -91,12 +91,11 @@ export function TagInput({
   function commitInput() {
     const raw = inputVal.trim()
     if (!raw) return
-    // Support space-separated or comma-separated multi-tag entry
-    const parts = raw.split(/[\s,]+/).filter(Boolean)
+    const parts = raw.split(/,+/).map(p => p.trim()).filter(Boolean)
     for (const part of parts) {
       const slug = toTagSlug(part)
       if (slug.length >= 2 && !isAdded(slug)) {
-        addTag({ name: part.replace(/^#/, ''), slug })
+        addTag({ name: part.replace(/^#/, '').trim(), slug })
       }
     }
     setInputVal('')

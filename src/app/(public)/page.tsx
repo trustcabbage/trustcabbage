@@ -90,10 +90,10 @@ export default async function HomePage() {
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <span className="inline-block rounded-full bg-[#6d28d9]/10 border border-[#6d28d9]/20 text-[#6d28d9] px-4 py-1 text-xs font-black uppercase tracking-widest mb-5">
-            India&apos;s Company &amp; Brand Review Platform
+            India&apos;s Company &amp; Product Review Platform
           </span>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-950 leading-tight">
-            Find companies and brands you can trust —{' '}
+            Find companies and brands you can trust,{' '}
             <span className="text-[#6d28d9]">Decide with confidence.</span>
           </h1>
           <p className="mt-4 text-sm sm:text-lg leading-relaxed text-slate-500 max-w-xl mx-auto">

@@ -47,15 +47,15 @@ export function Navbar({ user }: { user: NavUser | null }) {
               {isCompanyAdmin ? (
                 <Link
                   href={dashboardHref}
-                  className="hidden sm:flex items-center gap-1.5 rounded-xl border border-violet-400/50 text-violet-200 font-black px-4 py-2 text-sm hover:bg-white/10 transition-colors"
+                  className="flex items-center gap-1.5 rounded-xl border border-violet-400/50 text-violet-200 font-black px-3 py-2 text-sm hover:bg-white/10 transition-colors"
                 >
                   <LayoutDashboard className="h-3.5 w-3.5" />
-                  My Company
+                  <span className="hidden sm:inline">My Company</span>
                 </Link>
               ) : (
                 <Link
                   href="/write-review"
-                  className="hidden sm:flex items-center gap-1.5 rounded-xl border border-violet-400/50 text-violet-200 font-black px-4 py-2 text-sm hover:bg-white/10 transition-colors"
+                  className="flex items-center gap-1.5 rounded-xl border border-violet-400/50 text-violet-200 font-black px-3 py-2 text-sm hover:bg-white/10 transition-colors"
                 >
                   <PenLine className="h-3.5 w-3.5" />
                   Write a review
@@ -75,21 +75,13 @@ export function Navbar({ user }: { user: NavUser | null }) {
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
                     <div className="absolute right-0 top-full mt-2 z-20 w-52 rounded-xl border border-slate-200 bg-white shadow-lg py-1">
-                      {isCompanyAdmin ? (
+                      {isCompanyAdmin && (
                         <Link
                           href={dashboardHref}
                           className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-violet-50"
                           onClick={() => setMenuOpen(false)}
                         >
                           <LayoutDashboard className="h-4 w-4 text-[#6d28d9]" /> My Company Dashboard
-                        </Link>
-                      ) : (
-                        <Link
-                          href="/write-review"
-                          className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-violet-50 sm:hidden"
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          <PenLine className="h-4 w-4 text-[#6d28d9]" /> Write a review
                         </Link>
                       )}
                       <button
@@ -112,8 +104,15 @@ export function Navbar({ user }: { user: NavUser | null }) {
                 Sign in
               </Link>
               <Link
+                href="/write-review"
+                className="sm:hidden flex items-center gap-1.5 rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-3 py-2 text-sm transition-colors"
+              >
+                <PenLine className="h-3.5 w-3.5" />
+                Write a review
+              </Link>
+              <Link
                 href="/login"
-                className="rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-4 py-2 text-sm transition-colors"
+                className="hidden sm:block rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-4 py-2 text-sm transition-colors"
               >
                 Get started
               </Link>
