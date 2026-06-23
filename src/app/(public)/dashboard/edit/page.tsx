@@ -23,13 +23,17 @@ export default async function DashboardEditPage() {
 
   const companyId = (profile as any).company_id
 
-  const [{ data: coRaw }, { data: productsRaw }] = await Promise.all([
+  const [{ data: coRaw }, { data: productsRaw }, { data: companyCatsRaw }, { data: allCatsRaw }] = await Promise.all([
     supabase.from('companies').select('*').eq('id', companyId).single(),
     supabase.from('products_services').select('id, name, type, description, price_range').eq('company_id', companyId).eq('is_active', true).order('sort_order'),
+    supabase.from('company_categories').select('category_id').eq('company_id', companyId),
+    supabase.from('categories').select('id, name, slug, parent_id').order('name'),
   ])
 
   const co = coRaw as any
   const products = (productsRaw ?? []) as any[]
+  const currentCategoryIds = ((companyCatsRaw ?? []) as any[]).map(r => r.category_id as string)
+  const allCategories = (allCatsRaw ?? []) as { id: string; name: string; slug: string; parent_id: string | null }[]
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -52,7 +56,7 @@ export default async function DashboardEditPage() {
             <p className="text-xs text-slate-400 mt-0.5">This information appears on your public company page.</p>
           </div>
           <div className="px-6 py-6">
-            <ProfileEditForm company={co} />
+            <ProfileEditForm company={co} allCategories={allCategories} currentCategoryIds={currentCategoryIds} />
           </div>
         </div>
 

@@ -467,8 +467,8 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                 {company.website && (
                   <li className="flex items-center gap-2">
                     <Globe className="h-4 w-4 text-[#6d28d9] flex-shrink-0" />
-                    <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-[#6d28d9] hover:text-[#7c3aed] hover:underline truncate font-bold text-sm">
-                      {company.website.replace(/^https?:\/\//, '')}
+                    <a href={/^https?:\/\//.test(company.website!) ? company.website! : `https://${company.website}`} target="_blank" rel="noopener noreferrer" className="text-[#6d28d9] hover:text-[#7c3aed] hover:underline truncate font-bold text-sm">
+                      {company.website!.replace(/^https?:\/\//, '')}
                     </a>
                   </li>
                 )}

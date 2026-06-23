@@ -61,6 +61,17 @@ export async function updateProfile(_prev: State, formData: FormData): Promise<S
   const { error } = await supabase.from('companies').update(updates).eq('id', companyId)
   if (error) return { error: error.message }
 
+  // Update categories if submitted
+  if (formData.get('categories_updated') === '1') {
+    const categoryIds = formData.getAll('category_ids') as string[]
+    await supabase.from('company_categories').delete().eq('company_id', companyId)
+    if (categoryIds.length > 0) {
+      await supabase.from('company_categories').insert(
+        categoryIds.map(catId => ({ company_id: companyId, category_id: catId }))
+      )
+    }
+  }
+
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/edit')
   return { success: 'Profile updated successfully' }
