@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
+import { BusinessTypeSelector, type BusinessType } from '@/components/business-type-selector'
+import { getCategoriesByBusinessType } from '@/lib/get-categories-by-business-type'
 
-interface Category { id: string; name: string; slug: string; icon: string | null; parent_id: string | null }
+interface Category { id: string; name: string; slug: string; icon: string | null; parent_id: string | null; platform_type: 'b2b' | 'b2c' | 'both' }
 interface BusinessModel { id: string; name: string; slug: string; description: string | null }
 
 interface Product {
@@ -43,9 +45,16 @@ export function CompanyForm({ categories, businessModels, mode, initialData }: C
   const router = useRouter()
   const supabase = createClient()
   const [saving, setSaving] = useState(false)
+  const [businessType, setBusinessType] = useState<BusinessType | ''>(
+    (initialData?.business_type as BusinessType) ?? 'business_services'
+  )
 
-  const parents = categories.filter(c => !c.parent_id)
-  const childrenOf = (parentId: string) => categories.filter(c => c.parent_id === parentId)
+  const visibleCategories = businessType
+    ? getCategoriesByBusinessType(businessType as BusinessType, categories)
+    : categories
+
+  const parents = visibleCategories.filter(c => !c.parent_id)
+  const childrenOf = (parentId: string) => visibleCategories.filter(c => c.parent_id === parentId)
 
   const [info, setInfo] = useState({
     name: initialData?.name ?? '',
@@ -146,6 +155,7 @@ export function CompanyForm({ categories, businessModels, mode, initialData }: C
       cin_number: info.cin_number.trim() || null,
       logo_url: logoUrl,
       business_model_id: businessModelId || null,
+      business_type: businessType || 'business_services',
       status: 'unclaimed',
       created_by_admin: true,
     }
@@ -285,6 +295,19 @@ export function CompanyForm({ categories, businessModels, mode, initialData }: C
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Business type */}
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <h2 className="text-base font-black text-slate-950">Business type</h2>
+        <p className="text-xs text-slate-500">Affects which review form customers see and which categories are shown below.</p>
+        <BusinessTypeSelector
+          value={businessType}
+          onChange={(v) => {
+            setBusinessType(v)
+            setSelectedCategories([])
+          }}
+        />
       </div>
 
       {/* Logo */}

@@ -190,7 +190,7 @@ export default function ForBusinessesPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
             <Link
-              href="/search"
+              href="/for-businesses/add"
               className="inline-flex items-center gap-2 rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-8 py-4 text-sm transition-all shadow-lg shadow-violet-900/50 hover:shadow-violet-700/40 hover:-translate-y-0.5"
             >
               Claim your company page — free <ArrowRight className="h-4 w-4" />
@@ -295,7 +295,7 @@ export default function ForBusinessesPage() {
                 Search your company name. If it&apos;s already listed, claim it with your GST or CIN. Verified within 48 hours.
               </p>
               <Link
-                href="/search"
+                href="/for-businesses/add"
                 className="inline-flex items-center gap-1.5 rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-4 py-2.5 text-xs transition-colors"
               >
                 <Search className="h-3.5 w-3.5" /> Search my company

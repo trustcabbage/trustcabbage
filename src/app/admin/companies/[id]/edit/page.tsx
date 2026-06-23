@@ -4,7 +4,7 @@ import { CompanyForm } from '../../new/_components/company-form'
 import { CompanyFeaturesSection } from './_components/company-features-section'
 
 type Props = { params: Promise<{ id: string }> }
-type Category = { id: string; name: string; slug: string; icon: string | null; parent_id: string | null }
+type Category = { id: string; name: string; slug: string; icon: string | null; parent_id: string | null; platform_type: 'b2b' | 'b2c' | 'both' }
 
 export default async function AdminCompanyEditPage({ params }: Props) {
   const { id } = await params
@@ -12,7 +12,7 @@ export default async function AdminCompanyEditPage({ params }: Props) {
 
   const [{ data: companyData }, { data: categoriesData }, { data: companyCategories }, { data: productsData }, { data: modelsData }] = await Promise.all([
     supabase.from('companies').select('*').eq('id', id).single(),
-    supabase.from('categories').select('id, name, slug, icon, parent_id').eq('is_active', true).order('sort_order'),
+    supabase.from('categories').select('id, name, slug, icon, parent_id, platform_type').eq('is_active', true).order('sort_order'),
     supabase.from('company_categories').select('category_id').eq('company_id', id),
     supabase.from('products_services').select('*').eq('company_id', id).eq('is_active', true).order('sort_order'),
     supabase.from('business_models').select('id, name, slug, description').order('sort_order'),

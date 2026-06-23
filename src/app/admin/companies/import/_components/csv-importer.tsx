@@ -8,9 +8,19 @@ import { createClient } from '@/lib/supabase/client'
 
 interface Category { id: string; name: string; slug: string }
 
+const BUSINESS_TYPE_MAP: Record<string, string> = {
+  b2b: 'business_services',
+  b2c: 'online_b2c',
+  business_services: 'business_services',
+  online_b2c: 'online_b2c',
+  retail_chain: 'retail_chain',
+  both: 'both',
+}
+
 interface ParsedRow {
   name: string; website: string; description: string; city: string; state: string
   founded_year: string; employee_count: string; category_slugs: string; gst_number: string; cin_number: string
+  business_type: string
   _errors: string[]; _status: 'ok' | 'error' | 'duplicate'
 }
 
@@ -53,6 +63,9 @@ function parseCSV(text: string): ParsedRow[] {
     const row: any = { _errors: [], _status: 'ok' }
     headers.forEach((h, i) => { row[h] = values[i] ?? '' })
     if (!row.name?.trim()) { row._errors.push('Name is required'); row._status = 'error' }
+    // Normalize business_type: auto-map b2b/b2c, default to business_services
+    const rawBt = (row.business_type ?? '').trim().toLowerCase()
+    row.business_type = BUSINESS_TYPE_MAP[rawBt] ?? 'business_services'
     return row as ParsedRow
   })
 }
@@ -106,6 +119,7 @@ export function CsvImporter({ categories }: { categories: Category[] }) {
         employee_count: row.employee_count?.trim() || null,
         gst_number: row.gst_number?.trim() || null,
         cin_number: row.cin_number?.trim() || null,
+        business_type: row.business_type || 'business_services',
         status: 'unclaimed',
         created_by_admin: true,
       }).select('id').single()
@@ -172,6 +186,7 @@ export function CsvImporter({ categories }: { categories: Category[] }) {
                   <th className="text-left px-4 py-2.5 text-xs font-black text-slate-400 uppercase tracking-wide hidden lg:table-cell">Description</th>
                   <th className="text-left px-4 py-2.5 text-xs font-black text-slate-400 uppercase tracking-wide hidden sm:table-cell">City / State</th>
                   <th className="text-left px-4 py-2.5 text-xs font-black text-slate-400 uppercase tracking-wide hidden md:table-cell">Categories</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-black text-slate-400 uppercase tracking-wide hidden lg:table-cell">Type</th>
                   <th className="text-left px-4 py-2.5 text-xs font-black text-slate-400 uppercase tracking-wide">Issues</th>
                 </tr>
               </thead>
@@ -195,6 +210,9 @@ export function CsvImporter({ categories }: { categories: Category[] }) {
                       {row.category_slugs?.split('|').filter(Boolean).map(s => (
                         <span key={s} className={`inline-block mr-1 px-1.5 py-0.5 rounded font-mono text-[10px] ${slugToId[s.trim()] ? 'bg-violet-50 text-[#6d28d9]' : 'bg-red-50 text-red-600'}`}>{s}</span>
                       ))}
+                    </td>
+                    <td className="px-4 py-2.5 text-xs hidden lg:table-cell">
+                      <span className="rounded-full bg-slate-100 text-slate-600 px-2 py-0.5 font-mono text-[10px]">{row.business_type}</span>
                     </td>
                     <td className="px-4 py-2.5 text-xs text-red-600">{row._errors.join(', ')}</td>
                   </tr>

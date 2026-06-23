@@ -7,7 +7,7 @@ import { ReviewForm } from './_components/review-form'
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ ref?: string; src?: string; embed?: string }> }
 
 type CompanyWithProducts = {
-  id: string; name: string; slug: string; status: string
+  id: string; name: string; slug: string; status: string; business_type: string
   products_services: Array<{ id: string; name: string; type: string }>
 }
 
@@ -38,7 +38,7 @@ export default async function WriteReviewPage({ params, searchParams }: Props) {
 
   const { data: companyData } = await supabase
     .from('companies')
-    .select('id, name, slug, status, products_services(id, name, type)')
+    .select('id, name, slug, status, business_type, products_services(id, name, type)')
     .eq('slug', slug)
     .single()
 
@@ -83,6 +83,7 @@ export default async function WriteReviewPage({ params, searchParams }: Props) {
           refToken={ref ?? null}
           reviewSource={src ?? null}
           isEmbed={isEmbed}
+          businessType={company.business_type ?? 'business_services'}
         />
       </div>
     </div>

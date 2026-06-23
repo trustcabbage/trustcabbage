@@ -24,11 +24,11 @@ export default async function ClaimPage({ params, searchParams }: Props) {
 
   const { data: companyData } = await supabase
     .from('companies')
-    .select('id, name, slug, status')
+    .select('id, name, slug, status, business_type')
     .eq('slug', slug)
     .single()
 
-  const company = companyData as unknown as { id: string; name: string; slug: string; status: string } | null
+  const company = companyData as unknown as { id: string; name: string; slug: string; status: string; business_type: string } | null
   if (!company) notFound()
 
   if (company.status === 'claimed') {
@@ -83,7 +83,7 @@ export default async function ClaimPage({ params, searchParams }: Props) {
             </Link>
           </div>
         ) : (
-          <ClaimForm company={{ id: company.id, name: company.name, slug: company.slug }} userId={user.id} />
+          <ClaimForm company={{ id: company.id, name: company.name, slug: company.slug, business_type: company.business_type }} userId={user.id} />
         )}
       </div>
     </div>

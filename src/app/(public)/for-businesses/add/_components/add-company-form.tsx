@@ -1,7 +1,10 @@
 'use client'
 
+import { useState, useMemo } from 'react'
 import { useActionState } from 'react'
 import { addCompany } from '../_actions'
+import { BusinessTypeSelector, type BusinessType } from '@/components/business-type-selector'
+import { getCategoriesByBusinessType } from '@/lib/get-categories-by-business-type'
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
@@ -11,13 +14,42 @@ const INDIAN_STATES = [
   'West Bengal', 'Delhi', 'Chandigarh', 'Puducherry', 'Ladakh', 'Jammu & Kashmir',
 ]
 
-interface Category { id: string; name: string; slug: string; icon: string | null }
+interface Category { id: string; name: string; slug: string; icon: string | null; parent_id: string | null; platform_type: 'b2b' | 'b2c' | 'both' }
 
 export function AddCompanyForm({ initialName, categories }: { initialName: string; categories: Category[] }) {
   const [state, action, pending] = useActionState(addCompany, undefined)
+  const [step, setStep] = useState(0)
+  const [businessType, setBusinessType] = useState<BusinessType | ''>('')
+
+  const filteredCategories = useMemo(() => {
+    if (!businessType) return categories
+    return getCategoriesByBusinessType(businessType, categories)
+  }, [businessType, categories])
+
+  if (step === 0) {
+    return (
+      <div className="space-y-5">
+        <p className="text-sm text-slate-500">First, tell us what kind of company you are so we can show the right categories.</p>
+        <BusinessTypeSelector
+          value={businessType}
+          onChange={(v) => setBusinessType(v)}
+        />
+        <button
+          type="button"
+          onClick={() => setStep(1)}
+          disabled={!businessType}
+          className="w-full rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black py-3.5 text-sm transition-colors disabled:opacity-40 disabled:pointer-events-none"
+        >
+          Continue →
+        </button>
+      </div>
+    )
+  }
 
   return (
     <form action={action} className="space-y-5">
+      <input type="hidden" name="business_type" value={businessType} />
+
       {state?.error && (
         <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm font-bold text-red-700">
           {state.error}
@@ -50,7 +82,7 @@ export function AddCompanyForm({ initialName, categories }: { initialName: strin
           className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-950 focus:outline-none focus:border-[#6d28d9] focus:ring-1 focus:ring-[#6d28d9]/30 bg-white"
         >
           <option value="">Select a category…</option>
-          {categories.map(cat => (
+          {filteredCategories.map(cat => (
             <option key={cat.id} value={cat.id}>{cat.icon ? `${cat.icon} ` : ''}{cat.name}</option>
           ))}
         </select>
@@ -108,13 +140,22 @@ export function AddCompanyForm({ initialName, categories }: { initialName: strin
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black py-3.5 text-sm transition-colors disabled:opacity-50 disabled:pointer-events-none"
-      >
-        {pending ? 'Creating your page…' : 'Create my company page →'}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => setStep(0)}
+          className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-black text-slate-700 hover:bg-slate-50 transition-colors"
+        >
+          Back
+        </button>
+        <button
+          type="submit"
+          disabled={pending}
+          className="flex-1 rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black py-3.5 text-sm transition-colors disabled:opacity-50 disabled:pointer-events-none"
+        >
+          {pending ? 'Creating your page…' : 'Create my company page →'}
+        </button>
+      </div>
     </form>
   )
 }

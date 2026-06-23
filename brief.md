@@ -24,16 +24,18 @@ Trust Cabbage is an Indian B2B review and discovery platform — think Trustpilo
 
 ## Design system
 
+> Original brand color was `#F06105` (orange). Migrated to violet in Session 4. CODEBASE.md has the canonical token list. Values below reflect actual implementation.
+
 - Font: Pontano Sans (`next/font/google`, variable `--font-sans`)
-- Brand color: `#F06105` (RGB 240, 97, 5) — use Tailwind arbitrary values `bg-[#F06105]`, never `@theme`
-- Dark hero sections: `bg-slate-950`
+- Primary purple: `#6d28d9` | Primary hover: `#7c3aed`
+- Dark nav/hero bg: `#1e1b4b` | Violet accent: `#a78bfa`
 - Page background: `bg-slate-50`
-- Navbar: white/90 frosted `bg-white/90 backdrop-blur`, `border-b-2 border-[#F06105]/60`
-- Headings: `font-black`
-- Cards: `bg-white rounded-xl border border-slate-200 shadow-sm`
-- Primary button: `bg-[#F06105] hover:bg-[#C95204] text-white font-black rounded-xl`
-- Hover accent: `border-[#F06105]`, `text-[#F06105]`
+- Navbar: `bg-[#1e1b4b]` (dark plum)
+- Headings: `font-black` (900)
+- Cards: `bg-white rounded-xl border border-slate-200 shadow-sm p-6`
+- Primary button: `rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-6 py-2.5 text-sm`
 - Footer: `bg-slate-950`
+- Step indicators — active: `bg-[#6d28d9] text-white` | past: `bg-violet-100 text-[#6d28d9]` | future: `bg-slate-100 text-slate-400`
 
 ---
 
@@ -83,13 +85,15 @@ Trust Cabbage is an Indian B2B review and discovery platform — think Trustpilo
 id, name, slug, description, logo_url, cover_url, website, founded_year,
 employee_count, gst_number, cin_number, city, state,
 status (unclaimed | pending | claimed),
+business_type (business_services | online_b2c | retail_chain | both) NOT NULL default business_services,
 claimed_by (user_id FK), created_by (user_id FK), created_at, updated_at,
-average_rating, total_reviews, is_featured, is_verified
+average_rating, total_reviews, is_featured, is_verified, plan
 ```
 
 ### categories
 ```
-id, name, slug, parent_id (nullable), icon, description, sort_order, is_active, created_at
+id, name, slug, parent_id (nullable), icon, description, sort_order,
+is_active, is_featured, platform_type (b2b | b2c | both, default b2b), created_at
 ```
 
 ### company_categories (many-to-many)
@@ -105,17 +109,34 @@ id, company_id, name, description, type (product | service), price_range, is_act
 ### reviews
 ```
 id, company_id, reviewer_id, product_service_id (nullable),
+review_type (b2b | b2c),
+status (pending | published | flagged | removed),
+rating_overall, is_anonymous, helpful_votes,
+what_went_well, what_to_improve, additional_notes,
+would_recommend (yes | conditional | no), recommend_reason,
+proof_document_url, ref_token, review_source,
+created_at, updated_at,
+
+-- B2B only (nullable since migration 010):
 association_type (current_client | past_client | pilot | partner | vendor | evaluator),
 reviewer_role (decision_maker | end_user | evaluator | procurement | other),
 engagement_phase (pre_sales | onboarding | active | post_project | long_term),
 association_duration (lt_3m | 3_12m | 1_3y | 3y_plus),
-rating_overall, rating_staff, rating_quality, rating_communication,
-rating_billing, rating_after_sales, rating_delivery (all 1–5),
-what_went_well, what_to_improve,
-would_recommend (yes | no | conditional), recommend_reason,
-additional_notes, is_verified_buyer, proof_document_url,
-status (pending | published | flagged | removed),
-is_anonymous, helpful_votes, created_at, updated_at
+rating_staff, rating_quality, rating_communication,
+rating_billing, rating_after_sales, rating_delivery,
+
+-- B2C only:
+purchase_type (first_time | repeat | gifting),
+order_value_range (under_500 | 500_2000 | 2000_5000 | above_5000),
+discovery_channel (instagram | google | friend | youtube | other),
+purchase_channel (online | in_store | both),
+would_buy_again (yes | maybe | no),
+product_photo_url,
+rating_product_accuracy, rating_packaging, rating_delivery_speed,
+rating_return_refund, rating_value_for_money, rating_customer_support,
+
+-- Retail in-store (nullable unless purchase_channel includes in_store):
+rating_store_experience, rating_staff_in_store
 ```
 
 ### company_claims
@@ -145,29 +166,41 @@ app/
 │   ├── search/page.tsx                   ← Search results (?q=)
 │   ├── categories/page.tsx               ← All categories
 │   ├── categories/[slug]/page.tsx        ← Category listing (?sort=&verified=1)
+│   ├── tags/[slug]/page.tsx              ← Tag listing
 │   ├── write-review/
 │   │   ├── page.tsx                      ← "Who are you reviewing?" — search bar + results
-│   │   └── new/page.tsx                  ← Create company stub + write first review
+│   │   └── new/page.tsx                  ← 7-step: BusinessType → create company stub → B2B review
+│   ├── review/[slug]/page.tsx            ← Single review permalink
+│   ├── for-businesses/
+│   │   ├── page.tsx                      ← Marketing landing page (7 sections)
+│   │   └── add/page.tsx                  ← Auth-gated. Search + Claim OR create company stub
+│   ├── dashboard/
+│   │   ├── page.tsx                      ← Stats overview
+│   │   ├── edit/page.tsx                 ← Profile + products/services editor
+│   │   ├── settings/page.tsx             ← Business type settings
+│   │   ├── invites/page.tsx              ← Email invite sender
+│   │   ├── widget/page.tsx               ← Widget embed code
+│   │   └── qrcode/page.tsx               ← QR code download
 │   └── company/
 │       ├── [slug]/page.tsx               ← Company profile (SSR, SEO critical)
 │       ├── [slug]/reviews/page.tsx       ← All reviews paginated (?page=N)
-│       ├── [slug]/write-review/page.tsx  ← Review form for existing companies (6 steps)
-│       └── [slug]/claim/page.tsx         ← Claim company page
+│       ├── [slug]/write-review/page.tsx  ← B2B or B2C review form (branches on business_type)
+│       └── [slug]/claim/page.tsx         ← Claim company page (2-step: proof + BusinessTypeSelector)
 │
 ├── (auth)/
-│   └── login/page.tsx                    ← Email OTP
+│   └── login/page.tsx                    ← Email OTP. Context-aware heading via getLoginContext(?next=)
 │
-├── auth/callback/route.ts                ← Supabase auth code exchange
+├── auth/callback/route.ts                ← Supabase auth code exchange → redirect(next)
 │
 └── admin/                                ← Gated to role = 'admin'
     ├── claims/page.tsx
     ├── reviews/page.tsx
-    ├── categories/page.tsx               ← Tree view (parent + indented children), create with parent_id + is_featured
+    ├── categories/page.tsx               ← Tree view + platform_type badges, create/edit inline
     └── companies/
         ├── page.tsx                      ← List (?q= search, ?status= filter)
-        ├── new/page.tsx                  ← Manual create form
+        ├── new/page.tsx                  ← Manual create form (BusinessTypeSelector + filtered cats)
         ├── [id]/edit/page.tsx            ← Edit form
-        └── import/page.tsx              ← CSV bulk import
+        └── import/page.tsx              ← CSV bulk import (BUSINESS_TYPE_MAP auto-mapping)
 ```
 
 ---
@@ -219,13 +252,18 @@ This is how the database of companies grows organically.
 - All reviews visible
 - No products/services (empty until claimed)
 
-### Write review for existing company `/company/[slug]/write-review` (6 steps)
-1. Your relationship (association type, role, engagement phase, duration)
-2. Product / service (optional)
-3. Star ratings (6 factors)
-4. Written experience (what went well, what to improve, recommend)
-5. Proof upload (optional file → `review-proofs` bucket)
-6. Review summary + anonymous toggle + submit
+### Write review for existing company `/company/[slug]/write-review`
+
+Branches on `company.business_type`:
+- **`both`** → pre-step type selector ("As a business client" / "As an individual consumer") → routes to B2B or B2C
+- **B2B** (`business_services`): 6 steps — relationship → products → ratings (6 B2B factors) → written → proof → submit
+- **B2C** (`online_b2c` or `retail_chain`): 6 steps — purchase context (+ purchase_channel for retail) → products → ratings (6 B2C factors + 2 retail in-store if applicable) → written review + would_buy_again → photos & proof → submit
+
+Both paths: embed mode postMessage, refToken, reviewSource, product junction, tags, company_tags.
+
+### `/categories` all-categories page
+- Tab toggle: B2B Services (`?tab=b2b`, default) / Online Brands & Stores (`?tab=b2c`)
+- Filters by `platform_type IN ('b2b','both')` or `('b2c','both')` server-side
 
 ### Category listing `/categories/[slug]`
 - Sort: highest rated | most reviewed | newest — via `?sort=` URL param
@@ -310,35 +348,44 @@ NEXT_PUBLIC_SITE_URL=https://trustcabbage.com
 
 ### Phase 1 — Core ✅ COMPLETE
 - DB schema, RLS, storage buckets
-- Homepage, search, categories, company profile
-- `/write-review` search page + `/write-review/new` create-company flow
-- `/company/[slug]/write-review` — review form for existing companies (6 steps)
-- `/company/[slug]/claim` — claim flow
+- Homepage, search, categories, company profile (SSR + Schema.org)
+- `/write-review` search page + `/write-review/new` create-company flow (7 steps with BusinessTypeSelector)
+- `/company/[slug]/write-review` — B2B + B2C review forms (branches on business_type)
+- `/company/[slug]/claim` — 2-step: proof upload + BusinessTypeSelector confirmation
 - `/company/[slug]/reviews` — paginated all-reviews
-- Email OTP auth with `/auth/callback`
-- Admin: claims, reviews, categories (with subcategory tree), companies (manual create + CSV bulk import)
+- Email OTP auth + magic link with `/auth/callback`. Context-aware login headings.
+- Admin: claims, reviews, categories (platform_type badges), companies (manual create + CSV bulk import with BUSINESS_TYPE_MAP)
+- Migrations 001–012: full B2C schema (business_type, platform_type, review_type, 14 B2C columns, audit_log)
+- CODEBASE.md: persistent reference file for AI context across sessions
 
-### Phase 2 — Company tools (next)
-- Company dashboard: profile editing, products/services management
-- Reply to reviews
-- Review invite link + landing page ✅ DONE
-- WhatsApp share ✅ DONE
-- Embeddable badge widget (pure JS snippet, auto-updates)
-- Email invites — send branded invites via Resend; track per company per month in `invite_email_logs`
-- QR code — downloadable PNG for proposals, invoice footers, office reception
-- `/for-businesses` dedicated business landing page ✅ DONE
+### Phase 2 — Company tools ✅ MOSTLY COMPLETE
+- Company dashboard: profile editing, products/services management ✅
+- Reply to reviews ✅
+- Review invite link + landing page ✅
+- WhatsApp share ✅
+- Embeddable badge widget (JS snippet + embed mode postMessage) ✅
+- Email invites via Resend — tracked in `invite_email_logs` ✅
+- QR code — downloadable PNG ✅
+- `/for-businesses` dedicated business landing page ✅
+- `/for-businesses/add` — auth-gated company self-listing ✅
+
+**B2C patch — ALL 17 STEPS COMPLETE ✅**
+- Step 14 ✅ Homepage — two browse sections (B2B Services + Online Brands & Stores)
+- Step 15 ✅ `/categories` — tab toggle filters by platform_type server-side
+- Step 16 ✅ `/search` — type filter pill (All / B2B / Online Brands); applied to company + tag queries
+- Step 17 ✅ `/company/[slug]` — RatingBreakdown switches B2B/B2C/retail factors by business_type
 
 **Early access policy (until Phase 3 pricing launches):**
 All Phase 2 features are FREE for all claimed companies during early access.
-Code must still provision plan-based limits so enforcement can be switched on later:
-- Email invites: 100/month on Free plan, unlimited on Starter/Growth (track via `invite_email_logs`)
-- Bulk CSV email: Starter/Growth only (gate via `companies.plan` column)
+Plan limits live in `src/lib/plan-limits.ts` (`EARLY_ACCESS = true`) — flip one constant to enforce.
+- Email invites: 100/month on Free, unlimited on Starter/Growth (tracked via `invite_email_logs`)
+- Bulk CSV email: Starter/Growth only (`companies.plan` column)
 - Widget watermark: removed on Starter/Growth
-- QR code download: Growth only (gate ready, not enforced yet)
-Plan limits live in `src/lib/plan-limits.ts` — change one constant to enforce.
+- QR code download: Growth only (gate ready, not enforced)
 
 ### Phase 3 — Growth
 - Analytics dashboard
 - Razorpay subscription integration (Free / Starter ₹1,499 / Growth ₹4,999)
 - Featured listing / ads system
 - Reviewer profile pages
+- Homepage two-section browse (B2B Services + Online Brands & Stores) — Part of B2C patch step 14

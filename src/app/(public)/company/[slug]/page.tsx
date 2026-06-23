@@ -8,7 +8,16 @@ import { StarRating } from '@/components/reviews/star-rating'
 import { ReviewCard } from './_components/review-card'
 import { RatingBreakdown } from './_components/rating-breakdown'
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ tag?: string; already_reviewed?: string; own_company?: string }> }
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ tag?: string; already_reviewed?: string; own_company?: string; assoc?: string; sort?: string }> }
+
+const ASSOC_LABELS: Record<string, string> = {
+  current_client: 'Current client',
+  past_client: 'Past client',
+  pilot: 'Pilot',
+  partner: 'Partner',
+  vendor: 'Vendor',
+  evaluator: 'Evaluator',
+}
 
 type Company = {
   id: string; name: string; slug: string; description: string | null
@@ -17,7 +26,7 @@ type Company = {
   city: string | null; state: string | null
   status: 'unclaimed' | 'pending' | 'claimed'
   average_rating: number; total_reviews: number
-  is_verified: boolean; is_featured: boolean
+  is_verified: boolean; is_featured: boolean; business_type: string
   company_categories: Array<{ categories: { id: string; name: string; slug: string; icon: string | null; description: string | null } | null }>
   products_services: Array<{ id: string; name: string; type: string; description: string | null; price_range: string | null; is_active: boolean }>
   business_models: { id: string; name: string; slug: string } | null
@@ -53,7 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CompanyPage({ params, searchParams }: Props) {
   const { slug } = await params
-  const { tag: activeTag = '', already_reviewed, own_company } = await searchParams
+  const { tag: activeTag = '', already_reviewed, own_company, assoc: activeAssoc = '', sort: reviewSort = 'newest' } = await searchParams
   const supabase = await createClient()
 
   // Determine if viewer is company admin for this page (needed for reply button)
@@ -72,7 +81,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     .select(`
       id, name, slug, description, logo_url, cover_url, website, founded_year,
       employee_count, city, state, status, average_rating, total_reviews,
-      is_verified, is_featured,
+      is_verified, is_featured, business_type,
       company_categories(categories(id, name, slug, icon, description)),
       products_services(id, name, type, description, price_range, is_active),
       business_models(id, name, slug)
@@ -85,8 +94,12 @@ export default async function CompanyPage({ params, searchParams }: Props) {
   const isOwner = viewerCompanyId !== null && viewerCompanyId === company.id
 
   const reviewSelect = `
-    id, rating_overall, rating_staff, rating_quality, rating_communication,
+    id, rating_overall, review_type,
+    rating_staff, rating_quality, rating_communication,
     rating_billing, rating_after_sales, rating_delivery,
+    rating_product_accuracy, rating_packaging, rating_delivery_speed,
+    rating_return_refund, rating_value_for_money, rating_customer_support,
+    rating_store_experience, rating_staff_in_store,
     what_went_well, what_to_improve, would_recommend, recommend_reason,
     association_type, reviewer_role, engagement_phase, association_duration,
     is_anonymous, is_verified_buyer, helpful_votes, created_at,
@@ -94,6 +107,13 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     products_services(name),
     review_product_services(products_services(id, name))
   `
+
+  function applyReviewOrder(q: any) {
+    if (reviewSort === 'oldest') return q.order('created_at', { ascending: true })
+    if (reviewSort === 'highest') return q.order('rating_overall', { ascending: false })
+    if (reviewSort === 'lowest') return q.order('rating_overall', { ascending: true })
+    return q.order('created_at', { ascending: false }) // newest (default)
+  }
 
   let rawReviews: any[] = []
   if (activeTag) {
@@ -104,18 +124,18 @@ export default async function CompanyPage({ params, searchParams }: Props) {
         .from('review_tags').select('review_id').eq('tag_id', (tagData as any).id)
       const reviewIds = ((rtRows ?? []) as any[]).map(r => r.review_id)
       if (reviewIds.length > 0) {
-        const { data } = await supabase
-          .from('reviews').select(reviewSelect)
-          .eq('company_id', company.id).in('id', reviewIds)
-          .eq('status', 'published').order('created_at', { ascending: false })
+        let q = supabase.from('reviews').select(reviewSelect)
+          .eq('company_id', company.id).in('id', reviewIds).eq('status', 'published')
+        if (activeAssoc) q = q.eq('association_type', activeAssoc)
+        const { data } = await applyReviewOrder(q)
         rawReviews = (data ?? []) as any[]
       }
     }
   } else {
-    const { data } = await supabase
-      .from('reviews').select(reviewSelect)
+    let q = supabase.from('reviews').select(reviewSelect)
       .eq('company_id', company.id).eq('status', 'published')
-      .order('created_at', { ascending: false }).limit(10)
+    if (activeAssoc) q = q.eq('association_type', activeAssoc)
+    const { data } = await applyReviewOrder(q).limit(10)
     rawReviews = (data ?? []) as any[]
   }
 
@@ -221,10 +241,16 @@ export default async function CompanyPage({ params, searchParams }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }}
       />
 
+      {/* Cover image */}
+      {company.cover_url && (
+        <div className="h-44 sm:h-56 w-full overflow-hidden bg-slate-200">
+          <img src={company.cover_url} alt="" className="w-full h-full object-cover" />
+        </div>
+      )}
+
       {/* Company hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-violet-50 via-white to-slate-50 border-b border-slate-200 pt-8 pb-10">
-        {/* Subtle top accent */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#6d28d9] via-violet-400 to-violet-300" />
+      <section className={`relative overflow-hidden border-b border-slate-200 pb-10 ${company.cover_url ? 'bg-white pt-0' : 'bg-gradient-to-b from-violet-50 via-white to-slate-50 pt-8'}`}>
+        {!company.cover_url && <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#6d28d9] via-violet-400 to-violet-300" />}
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           {company.status === 'unclaimed' && (
             <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-5 py-4 flex items-center justify-between gap-4">
@@ -240,8 +266,8 @@ export default async function CompanyPage({ params, searchParams }: Props) {
             </div>
           )}
 
-          <div className="flex gap-5 items-start">
-            <div className="h-20 w-20 rounded-2xl bg-white border border-slate-200 shadow-md flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div className={`flex gap-5 items-start ${company.cover_url ? '-mt-10' : ''}`}>
+            <div className="h-20 w-20 rounded-2xl bg-white border-2 border-white shadow-md flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-slate-100">
               {company.logo_url
                 ? <img src={company.logo_url} alt={`${company.name} logo`} className="h-20 w-20 object-cover" />
                 : <span className="rounded-xl bg-[#6d28d9] h-12 w-12 flex items-center justify-center text-white text-xl font-black">{company.name[0]}</span>}
@@ -291,7 +317,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               <p className="text-slate-600 leading-relaxed">{company.description}</p>
             )}
 
-            <RatingBreakdown reviews={reviews} />
+            <RatingBreakdown reviews={reviews} businessType={company.business_type} />
 
             {/* Reviews */}
             <div>
@@ -315,34 +341,77 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                 </Link>
               </div>
 
-              {/* Tag filter bar */}
-              {companyTags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-5">
-                  <Link
-                    href={`/company/${slug}`}
-                    className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
-                      !activeTag
-                        ? 'bg-[#6d28d9] border-[#6d28d9] text-white'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
-                    }`}
-                  >
-                    All reviews
-                  </Link>
-                  {companyTags.map(tag => (
-                    <Link
-                      key={tag.id}
-                      href={`/company/${slug}?tag=${tag.slug}`}
-                      className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
-                        activeTag === tag.slug
-                          ? 'bg-[#6d28d9] border-[#6d28d9] text-white'
-                          : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
-                      }`}
-                    >
-                      #{tag.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
+              {/* Review filters */}
+              {(() => {
+                const rp: Record<string, string> = {}
+                if (activeTag) rp.tag = activeTag
+                if (activeAssoc) rp.assoc = activeAssoc
+                if (reviewSort !== 'newest') rp.sort = reviewSort
+
+                function rfHref(override: Record<string, string | undefined>) {
+                  const p = new URLSearchParams(rp)
+                  Object.entries(override).forEach(([k, v]) => { if (v === undefined) p.delete(k); else p.set(k, v) })
+                  const qs = p.toString()
+                  return `/company/${slug}${qs ? '?' + qs : ''}`
+                }
+
+                return (
+                  <div className="space-y-2.5 mb-5">
+                    {/* Sort */}
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 w-14">Sort</span>
+                      {([['newest', 'Newest'], ['oldest', 'Oldest'], ['highest', 'Highest rated'], ['lowest', 'Lowest rated']] as const).map(([v, label]) => (
+                        <Link key={v} href={rfHref({ sort: v === 'newest' ? undefined : v })}
+                          className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
+                            reviewSort === v ? 'bg-[#6d28d9] border-[#6d28d9] text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
+                          }`}>
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+
+                    {/* Association type */}
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 w-14">From</span>
+                      <Link href={rfHref({ assoc: undefined })}
+                        className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
+                          !activeAssoc ? 'bg-[#6d28d9] border-[#6d28d9] text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
+                        }`}>
+                        All
+                      </Link>
+                      {Object.entries(ASSOC_LABELS).map(([v, label]) => (
+                        <Link key={v} href={rfHref({ assoc: activeAssoc === v ? undefined : v })}
+                          className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
+                            activeAssoc === v ? 'bg-[#6d28d9] border-[#6d28d9] text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
+                          }`}>
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+
+                    {/* Tag filter */}
+                    {companyTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 w-14">Tag</span>
+                        <Link href={rfHref({ tag: undefined })}
+                          className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
+                            !activeTag ? 'bg-[#6d28d9] border-[#6d28d9] text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
+                          }`}>
+                          All reviews
+                        </Link>
+                        {companyTags.map(tag => (
+                          <Link key={tag.id} href={rfHref({ tag: activeTag === tag.slug ? undefined : tag.slug })}
+                            className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
+                              activeTag === tag.slug ? 'bg-[#6d28d9] border-[#6d28d9] text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
+                            }`}>
+                            #{tag.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
 
               {reviews.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-8 py-16 text-center">

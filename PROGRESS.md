@@ -59,6 +59,60 @@ _Brief: Indian B2B review platform (Trustpilot for India). Next.js 16.2.9 App Ro
 
 ---
 
+## Known Gaps vs Brief — identified 22 Jun 2026
+
+> Reference: `trust-cabbage-homepage-content.md` (shared by user). Cross-checked every page against brief.
+> Homepage search (HomeSearch component) ✅ fully matches brief. `/search` results page is the gap.
+
+### 🔴 Flow mismatches — wrong links (quick fixes)
+
+- `/for-businesses` hero CTA "Claim your company page — free" → goes to `/search` (buyer page). Should go to `/for-businesses/add`
+- `/for-businesses` Step 1 "Search my company" → goes to `/search`. Should go to `/for-businesses/add`
+- Homepage For-Businesses band secondary CTA "Search if your company is already listed →" → goes to `/for-businesses`. Should go to `/for-businesses/add`
+- `/categories/[slug]` empty state "Add a company" → goes to `/write-review`. Should go to `/for-businesses/add`
+- Homepage featured company cards: `average_rating.toFixed(1)` has no null check — crashes if any featured company has no reviews (same bug fixed in `/search` page)
+
+### 🔴 Footer — missing columns
+
+Brief specifies 4 link columns. Currently only 3:
+- **For Buyers** missing: "How reviews work" link
+- **For Businesses** missing: "For business owners" (→ `/for-businesses`) and "Pricing"
+- **Company column entirely missing**: About Trust Cabbage, Our review policy, Anti-fake review commitment, Blog, Contact us, Advertise with us
+
+### 🟡 `/search` results page — structural gaps
+
+Currently: flat company list + tag-matched companies. Brief requires:
+- Tabs: Companies / Categories & Subcategories / Products & Services / #Tags
+- Left sidebar filters: Rating, City/State, Verified only, Sort
+- "Add this company" CTA on zero results (currently shows "Try a different search term")
+- 1 sponsored result slot at top (Phase 3)
+
+### 🟡 `/categories/[slug]` — missing card details + filters
+
+- Company card missing: top 2 services, review excerpt (shows description instead), founded year
+- Filters missing: City/State filter, Company size filter
+- SEO content block at bottom — not built
+
+### 🟡 `/company/[slug]` — missing sections
+
+- Cover image (`cover_url` exists in DB/type but not rendered in hero)
+- Tab navigation (Overview / Reviews / Products & Services / About) — currently single scrollable page
+- Review sentiment summary (auto-generated from review text) — not built
+- "Also consider" competitor sidebar cards — not built (Phase 3 / ad slot)
+- Helpful votes on reviews — not built
+- Review filter by: association type, service, date — only tag filter exists
+
+### 🟢 Fully matches brief (no gaps)
+
+- Homepage: all sections, search dropdown (5 sections), rotating placeholder, keyboard nav, trust signals, featured companies, recent reviews, stats, for-businesses CTA band
+- `/for-businesses`: all 7 sections correct
+- `/company/[slug]`: logo, badges, rating breakdown, reviews, tag filter, claim banner, Schema.org, OG meta
+- `/write-review` and `/write-review/new`: correct (reviewer flow, not business flow)
+- `/for-businesses/add`: search + OR + create form (restored)
+- Admin panel: all pages built
+
+---
+
 ## Phase 2 — Company tools (not started)
 - Company dashboard: profile editing, products/services management, reply to reviews
 - Review invite link + landing page (`/review/[slug]?ref=[token]`)

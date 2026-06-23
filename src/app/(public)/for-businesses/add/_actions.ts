@@ -14,7 +14,7 @@ function toSlug(name: string): string {
 export async function addCompany(_prev: { error: string } | void | undefined, formData: FormData): Promise<{ error: string } | void> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login?next=/for-businesses/add')
+  if (!user) return { error: 'You must be logged in to list a company' }
 
   const name = (formData.get('name') as string ?? '').trim()
   const website = (formData.get('website') as string ?? '').trim() || null
@@ -22,6 +22,7 @@ export async function addCompany(_prev: { error: string } | void | undefined, fo
   const city = (formData.get('city') as string ?? '').trim() || null
   const state = (formData.get('state') as string ?? '') || null
   const description = (formData.get('description') as string ?? '').trim() || null
+  const businessType = (formData.get('business_type') as string ?? '') || 'business_services'
 
   if (!name) return { error: 'Company name is required' }
 
@@ -33,7 +34,7 @@ export async function addCompany(_prev: { error: string } | void | undefined, fo
 
   const { data: company, error } = await supabase
     .from('companies')
-    .insert({ name, slug, website_url: website, city, state, description, status: 'unclaimed', created_by: user.id })
+    .insert({ name, slug, website, city, state, description, status: 'unclaimed', created_by: user.id, business_type: businessType })
     .select('id, slug')
     .single()
 

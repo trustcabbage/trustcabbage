@@ -8,9 +8,10 @@ export default async function AdminImportPage() {
   const { data } = await supabase.from('categories').select('id, name, slug').eq('is_active', true).order('sort_order')
   const categories = (data as unknown as Category[]) ?? []
 
-  const TEMPLATE = `name,website,description,city,state,founded_year,employee_count,category_slugs,gst_number,cin_number
-Razorpay,https://razorpay.com,"India's leading payment gateway",Bengaluru,Karnataka,2014,500+,payment-gateways,,
-Shiprocket,https://shiprocket.in,"Ecommerce shipping solution",Delhi,Delhi,2017,201-500,logistics,,`
+  const TEMPLATE = `name,website,description,city,state,founded_year,employee_count,category_slugs,gst_number,cin_number,business_type
+Razorpay,https://razorpay.com,"India's leading payment gateway",Bengaluru,Karnataka,2014,500+,payment-gateways,,,business_services
+Shiprocket,https://shiprocket.in,"Ecommerce shipping solution",Delhi,Delhi,2017,201-500,logistics,,,business_services
+Nykaa,https://nykaa.com,"Beauty & fashion marketplace",Mumbai,Maharashtra,2012,500+,beauty-personal-care,,,online_b2c`
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -22,7 +23,7 @@ Shiprocket,https://shiprocket.in,"Ecommerce shipping solution",Delhi,Delhi,2017,
       {/* Template download */}
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
         <h2 className="text-base font-black text-slate-950">Step 1 — Download template</h2>
-        <p className="text-sm text-slate-600">Use this CSV template. The <code className="bg-slate-100 px-1 rounded text-xs">category_slugs</code> column accepts pipe-separated slugs, e.g. <code className="bg-slate-100 px-1 rounded text-xs">payment-gateways|fintech</code></p>
+        <p className="text-sm text-slate-600">Use this CSV template. The <code className="bg-slate-100 px-1 rounded text-xs">category_slugs</code> column accepts pipe-separated slugs. The <code className="bg-slate-100 px-1 rounded text-xs">business_type</code> column accepts: <code className="bg-slate-100 px-1 rounded text-xs">business_services</code>, <code className="bg-slate-100 px-1 rounded text-xs">online_b2c</code>, <code className="bg-slate-100 px-1 rounded text-xs">retail_chain</code>. Leave blank to default to <code className="bg-slate-100 px-1 rounded text-xs">business_services</code>.</p>
         <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 overflow-x-auto">
           <pre className="text-xs text-slate-600 font-mono whitespace-pre">{TEMPLATE}</pre>
         </div>

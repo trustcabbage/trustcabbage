@@ -6,11 +6,11 @@ import { StarRating } from '@/components/reviews/star-rating'
 import { HomeSearch } from '@/components/layout/home-search'
 
 export const metadata: Metadata = {
-  title: 'Trust Cabbage — Find B2B Companies You Can Actually Trust',
-  description: 'Real reviews from real businesses. India\'s first detailed B2B review platform — read verified client reviews for agencies, SaaS, logistics providers, and more.',
+  title: 'Trust Cabbage — Find Companies & Brands You Can Actually Trust',
+  description: 'Real reviews from real customers. India\'s first company & brand review platform — verified reviews for service companies, online brands, and D2C stores across India.',
 }
 
-type CategoryRow = { id: string; name: string; slug: string; icon: string | null }
+type CategoryRow = { id: string; name: string; slug: string; icon: string | null; platform_type: string }
 type FeaturedCompany = {
   id: string; name: string; slug: string; logo_url: string | null
   average_rating: number; total_reviews: number; city: string | null; state: string | null
@@ -57,7 +57,7 @@ export default async function HomePage() {
     { count: reviewCount },
     { count: categoryCount },
   ] = await Promise.all([
-    supabase.from('categories').select('id, name, slug, icon').eq('is_active', true).is('parent_id', null).order('sort_order').limit(12),
+    supabase.from('categories').select('id, name, slug, icon, platform_type').eq('is_active', true).is('parent_id', null).order('sort_order').limit(30),
     supabase.from('companies').select('id, name, slug, logo_url, average_rating, total_reviews, city, state, is_verified, is_featured').eq('is_featured', true).order('total_reviews', { ascending: false }).limit(8),
     supabase.from('reviews').select('id, rating_overall, what_went_well, created_at, is_anonymous, is_verified_buyer, companies(name, slug, city), users(display_name)').eq('status', 'published').order('created_at', { ascending: false }).limit(6),
     supabase.from('companies').select('*', { count: 'exact', head: true }),
@@ -65,7 +65,9 @@ export default async function HomePage() {
     supabase.from('categories').select('*', { count: 'exact', head: true }).eq('is_active', true),
   ])
 
-  const categories = (categoriesRaw ?? []) as CategoryRow[]
+  const allCats = (categoriesRaw ?? []) as CategoryRow[]
+  const b2bCats = allCats.filter(c => c.platform_type === 'b2b' || c.platform_type === 'both').slice(0, 12)
+  const b2cCats = allCats.filter(c => c.platform_type === 'b2c' || c.platform_type === 'both').slice(0, 12)
   const featured = (featuredRaw ?? []) as FeaturedCompany[]
   const recentReviews = (recentRaw ?? []) as unknown as RecentReview[]
 
@@ -88,14 +90,14 @@ export default async function HomePage() {
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <span className="inline-block rounded-full bg-[#6d28d9]/10 border border-[#6d28d9]/20 text-[#6d28d9] px-4 py-1 text-xs font-black uppercase tracking-widest mb-5">
-            India&apos;s B2B Review Platform
+            India&apos;s Company &amp; Brand Review Platform
           </span>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-950 leading-tight">
-            Find B2B companies you can{' '}
-            <span className="text-[#6d28d9]">actually trust.</span>
+            Find companies and brands you can trust —{' '}
+            <span className="text-[#6d28d9]">Decide with confidence.</span>
           </h1>
           <p className="mt-4 text-sm sm:text-lg leading-relaxed text-slate-500 max-w-xl mx-auto">
-            Real reviews from real businesses. No fluff, no paid opinions. India&apos;s first detailed B2B review platform.
+            Real reviews from real customers. No fluff, no paid opinions. India&apos;s first detailed product company review platform.
           </p>
           <div className="mt-6 relative z-10">
             <HomeSearch />
@@ -122,16 +124,72 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Browse by category ── */}
+      {/* ── Why Trust Cabbage ── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#2e1065] via-[#4c1d95] to-[#6d28d9] py-20">
+        {/* Background texture blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] bg-violet-400/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
+          {/* Heading */}
+          <div className="text-center mb-12">
+            <span className="inline-block rounded-full bg-white/10 border border-white/20 text-violet-200 px-4 py-1 text-xs font-black uppercase tracking-widest mb-5">
+              Our purpose
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight">
+              Why Trust Cabbage
+            </h2>
+          </div>
+
+          {/* Body paragraphs */}
+          <div className="max-w-3xl mx-auto space-y-5 text-violet-100 text-base sm:text-lg leading-relaxed">
+            <p>
+              When you partner with a service company, or order from an online brand — everything looks great on the surface.
+              The website is polished. The pitch is confident. The promises are big.
+              The real picture only comes after you&apos;ve signed, ordered, paid, and started working together.
+            </p>
+            <p>
+              Trust Cabbage exists to change that. Real clients and buyers share their honest experiences — the good,
+              the not-so-good, and everything in between. So the next person making that decision doesn&apos;t have to go in blind.
+            </p>
+            <p>
+              Search any company, any service, any brand. See who the best in their space really are — not according to them,
+              but according to the people who&apos;ve actually worked with them.
+            </p>
+          </div>
+
+          {/* Closing quote */}
+          <div className="mt-14 max-w-3xl mx-auto text-center">
+            <div className="inline-block border-t border-b border-white/20 py-6 px-4">
+              <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-snug">
+                Because the best time to know about a company is before you need them — not after.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Browse B2B Services ── */}
       <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-950 mb-2">What kind of service are you looking for?</h2>
-          <p className="text-slate-500 text-sm mb-8">Browse by category to find the right B2B partner</p>
+          <div className="flex items-end justify-between mb-2">
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-[#6d28d9] mb-1">For businesses</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-950">Find a B2B service provider</h2>
+            </div>
+            <Link href="/categories" className="hidden sm:flex items-center gap-1 text-sm font-black text-[#6d28d9] hover:text-[#7c3aed] transition-colors">
+              All B2B categories <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <p className="text-slate-500 text-sm mb-8">Agencies, SaaS, logistics, consulting and more — read verified reviews before you sign</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {(categories.length > 0 ? categories : PLACEHOLDER_CATEGORIES).map((cat) => (
+            {(b2bCats.length > 0 ? b2bCats : PLACEHOLDER_CATEGORIES).map((cat) => (
               <Link
-                key={cat.id ?? cat.name}
-                href={categories.length > 0 ? `/categories/${cat.slug}` : '/categories'}
+                key={(cat as any).id ?? (cat as any).name}
+                href={b2bCats.length > 0 ? `/categories/${cat.slug}` : '/categories'}
                 className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white hover:border-[#6d28d9] hover:shadow-sm hover:-translate-y-0.5 transition-all group"
               >
                 <span className="text-2xl leading-none">{cat.icon ?? '🏢'}</span>
@@ -139,9 +197,42 @@ export default async function HomePage() {
               </Link>
             ))}
           </div>
-          <div className="mt-8 text-center">
+          <div className="mt-6 sm:hidden text-center">
             <Link href="/categories" className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-6 py-2.5 text-sm font-black text-slate-700 hover:border-[#6d28d9] hover:text-[#6d28d9] transition-colors">
-              Browse all {statsCategories} categories <ArrowRight className="h-4 w-4" />
+              All B2B categories <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Browse Online Brands & Stores ── */}
+      <section className="bg-slate-50 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-end justify-between mb-2">
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-rose-500 mb-1">For consumers</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-950">Discover Online Brands & Stores</h2>
+            </div>
+            <Link href="/categories?tab=b2c" className="hidden sm:flex items-center gap-1 text-sm font-black text-rose-500 hover:text-rose-600 transition-colors">
+              All B2C categories <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <p className="text-slate-500 text-sm mb-8">Fashion, beauty, electronics, food and more — read real reviews before you order</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {(b2cCats.length > 0 ? b2cCats : PLACEHOLDER_B2C_CATEGORIES).map((cat) => (
+              <Link
+                key={(cat as any).id ?? (cat as any).name}
+                href={b2cCats.length > 0 ? `/categories/${cat.slug}` : '/categories?tab=b2c'}
+                className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white hover:border-rose-300 hover:shadow-sm hover:-translate-y-0.5 transition-all group"
+              >
+                <span className="text-2xl leading-none">{cat.icon ?? '🛍️'}</span>
+                <span className="font-black text-slate-800 group-hover:text-rose-600 text-sm leading-snug">{cat.name}</span>
+              </Link>
+            ))}
+          </div>
+          <div className="mt-6 sm:hidden text-center">
+            <Link href="/categories?tab=b2c" className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-6 py-2.5 text-sm font-black text-slate-700 hover:border-rose-300 hover:text-rose-600 transition-colors">
+              All B2C categories <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -151,26 +242,26 @@ export default async function HomePage() {
       <section className="bg-slate-50 py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl font-black text-slate-950 mb-2 text-center">How Trust Cabbage works</h2>
-          <p className="text-slate-500 text-sm text-center mb-12">Three steps. Choose the right B2B partner in minutes.</p>
+          <p className="text-slate-500 text-sm text-center mb-12">Three steps. Find the right company or brand in minutes.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 lg:gap-12">
             {[
               {
                 icon: Search,
                 step: '01',
-                title: 'Search any B2B company, service, or hashtag',
-                desc: 'Type a company name, a service you need, or a hashtag like #PaymentGateway. The search instantly shows matching companies, categories, products, and tags — all in one dropdown.',
+                title: 'Search any company, brand, service, or hashtag',
+                desc: 'Type a company name, a brand you\'ve heard of, or a hashtag like #PaymentGateway. The search instantly shows matching companies, categories, products, and tags — all in one dropdown.',
               },
               {
                 icon: Star,
                 step: '02',
                 title: 'Read detailed, honest reviews',
-                desc: 'Every review covers 6 factors — team behaviour, quality, communication, billing, after-sales support, and delivery. Written by actual clients, not anonymous strangers.',
+                desc: 'Every review covers key factors — quality, delivery, customer support, communication, and more. Written by actual clients and customers, not anonymous strangers.',
               },
               {
                 icon: Handshake,
                 step: '03',
                 title: 'Choose with confidence',
-                desc: 'Compare companies side by side. See what real clients say before you sign a contract or transfer a rupee.',
+                desc: 'Compare companies and brands side by side. See what real clients and customers say before you sign a contract or place an order.',
               },
             ].map((item) => (
               <div key={item.step} className="text-center">
@@ -221,7 +312,7 @@ export default async function HomePage() {
                     </div>
                     <div className="flex items-center gap-1 mt-0.5">
                       <StarRating value={company.average_rating} size="sm" />
-                      <span className="text-xs text-slate-500">{company.average_rating.toFixed(1)} ({company.total_reviews})</span>
+                      <span className="text-xs text-slate-500">{(company.average_rating ?? 0).toFixed(1)} ({company.total_reviews ?? 0})</span>
                     </div>
                     {(company.city || company.state) && (
                       <p className="text-xs text-slate-400 mt-0.5">{[company.city, company.state].filter(Boolean).join(', ')}</p>
@@ -237,15 +328,15 @@ export default async function HomePage() {
       {/* ── Why Trust Cabbage is different ── */}
       <section className="bg-[#1e1b4b] py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-3xl font-black text-white text-center mb-2">Built for Indian B2B. Not adapted from somewhere else.</h2>
-          <p className="text-slate-400 text-sm text-center mb-12">Designed specifically for how business gets done in India</p>
+          <h2 className="text-2xl sm:text-3xl font-black text-white text-center mb-2">Built for Indian businesses & brands. Not adapted from somewhere else.</h2>
+          <p className="text-slate-400 text-sm text-center mb-12">Designed specifically for how business and commerce get done in India</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               {
                 icon: ShieldCheck,
                 tag: 'For buyers',
                 title: 'Reviews you can verify',
-                body: 'Every reviewer confirms their identity before writing. Association type, engagement phase, and duration are all declared. You know exactly who wrote what and why.',
+                body: 'Every reviewer confirms their identity before writing. Their purchase type, experience, and duration are all declared. You know exactly who wrote what and why.',
               },
               {
                 icon: TrendingUp,
@@ -256,8 +347,8 @@ export default async function HomePage() {
               {
                 icon: Globe,
                 tag: 'For the ecosystem',
-                title: 'Raising the bar for Indian B2B',
-                body: 'Too many businesses win contracts on connections, not merit. Trust Cabbage shifts that — the best companies rise, regardless of network or marketing budget.',
+                title: 'Raising the bar for Indian businesses & brands',
+                body: 'Too many companies win clients and customers on connections, not merit. Trust Cabbage shifts that — the best companies and brands rise, regardless of network or marketing budget.',
               },
             ].map(item => (
               <div key={item.tag} className="rounded-2xl bg-white/5 border border-white/10 p-6">
@@ -277,8 +368,8 @@ export default async function HomePage() {
       {recentReviews.length > 0 && (
         <section className="bg-slate-50 py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-950 mb-2">What businesses are saying right now</h2>
-            <p className="text-slate-500 text-sm mb-8">Recent reviews from verified B2B clients across India</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-950 mb-2">What people are saying right now</h2>
+            <p className="text-slate-500 text-sm mb-8">Recent reviews from verified clients and customers across India</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {recentReviews.map(review => (
                 <Link
@@ -330,7 +421,7 @@ export default async function HomePage() {
             <Link href="/for-businesses/add" className="rounded-xl bg-white text-[#6d28d9] font-black px-7 py-3.5 text-sm hover:bg-violet-50 transition-colors shadow-lg">
               List my company — it&apos;s free
             </Link>
-            <Link href="/for-businesses" className="rounded-xl border-2 border-white/40 text-white font-black px-7 py-3.5 text-sm hover:bg-white/10 transition-colors">
+            <Link href="/for-businesses/add" className="rounded-xl border-2 border-white/40 text-white font-black px-7 py-3.5 text-sm hover:bg-white/10 transition-colors">
               Search if your company is already listed →
             </Link>
           </div>
@@ -351,7 +442,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { value: statsCompanies, label: 'Companies listed', sub: 'across all categories' },
-              { value: statsReviews, label: 'Reviews published', sub: 'by verified B2B buyers' },
+              { value: statsReviews, label: 'Reviews published', sub: 'by verified buyers & customers' },
               { value: '96%', label: 'Reviewers verified', sub: 'email-confirmed accounts' },
               { value: statsCategories, label: 'Service categories', sub: 'and growing' },
             ].map(s => (
@@ -370,16 +461,31 @@ export default async function HomePage() {
 }
 
 const PLACEHOLDER_CATEGORIES = [
-  { id: '1', name: 'Web & App Development', slug: '', icon: '💻' },
-  { id: '2', name: 'Digital Marketing', slug: '', icon: '📣' },
-  { id: '3', name: 'Accounting & Finance', slug: '', icon: '📊' },
-  { id: '4', name: 'Legal & Compliance', slug: '', icon: '⚖️' },
-  { id: '5', name: 'HR & Recruitment', slug: '', icon: '👥' },
-  { id: '6', name: 'Logistics & Supply Chain', slug: '', icon: '📦' },
-  { id: '7', name: 'IT Infrastructure', slug: '', icon: '🖥️' },
-  { id: '8', name: 'Business Consulting', slug: '', icon: '🧠' },
-  { id: '9', name: 'Ecommerce Services', slug: '', icon: '🛒' },
-  { id: '10', name: 'Creative & Design', slug: '', icon: '🎨' },
-  { id: '11', name: 'Customer Support / BPO', slug: '', icon: '🎧' },
-  { id: '12', name: 'Cloud & SaaS Tools', slug: '', icon: '☁️' },
+  { id: '1', name: 'Web & App Development', slug: '', icon: '💻', platform_type: 'b2b' },
+  { id: '2', name: 'Digital Marketing', slug: '', icon: '📣', platform_type: 'b2b' },
+  { id: '3', name: 'Accounting & Finance', slug: '', icon: '📊', platform_type: 'b2b' },
+  { id: '4', name: 'Legal & Compliance', slug: '', icon: '⚖️', platform_type: 'b2b' },
+  { id: '5', name: 'HR & Recruitment', slug: '', icon: '👥', platform_type: 'b2b' },
+  { id: '6', name: 'Logistics & Supply Chain', slug: '', icon: '📦', platform_type: 'b2b' },
+  { id: '7', name: 'IT Infrastructure', slug: '', icon: '🖥️', platform_type: 'b2b' },
+  { id: '8', name: 'Business Consulting', slug: '', icon: '🧠', platform_type: 'b2b' },
+  { id: '9', name: 'Ecommerce Services', slug: '', icon: '🛒', platform_type: 'b2b' },
+  { id: '10', name: 'Creative & Design', slug: '', icon: '🎨', platform_type: 'b2b' },
+  { id: '11', name: 'Customer Support / BPO', slug: '', icon: '🎧', platform_type: 'b2b' },
+  { id: '12', name: 'Cloud & SaaS Tools', slug: '', icon: '☁️', platform_type: 'b2b' },
+]
+
+const PLACEHOLDER_B2C_CATEGORIES = [
+  { id: 'b1', name: 'Fashion & Apparel', slug: '', icon: '👗', platform_type: 'b2c' },
+  { id: 'b2', name: 'Beauty & Personal Care', slug: '', icon: '💄', platform_type: 'b2c' },
+  { id: 'b3', name: 'Home & Living', slug: '', icon: '🏠', platform_type: 'b2c' },
+  { id: 'b4', name: 'Electronics & Gadgets', slug: '', icon: '📱', platform_type: 'b2c' },
+  { id: 'b5', name: 'Food & Beverages', slug: '', icon: '🍽️', platform_type: 'b2c' },
+  { id: 'b6', name: 'Health & Wellness', slug: '', icon: '🌿', platform_type: 'b2c' },
+  { id: 'b7', name: 'Books, Hobbies & Learning', slug: '', icon: '📚', platform_type: 'b2c' },
+  { id: 'b8', name: 'Baby & Kids', slug: '', icon: '👶', platform_type: 'b2c' },
+  { id: 'b9', name: 'Pets', slug: '', icon: '🐾', platform_type: 'b2c' },
+  { id: 'b10', name: 'Automotive', slug: '', icon: '🚗', platform_type: 'b2c' },
+  { id: 'b11', name: 'Sustainable & Eco Brands', slug: '', icon: '♻️', platform_type: 'b2c' },
+  { id: 'b12', name: 'Retail / Multi-brand', slug: '', icon: '🏪', platform_type: 'b2c' },
 ]

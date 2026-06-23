@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { StarRating } from '@/components/reviews/star-rating'
-import { CheckCircle, AlertCircle, ExternalLink, Mail, ArrowRight, Code2, QrCode } from 'lucide-react'
+import { CheckCircle, AlertCircle, ExternalLink, Mail, ArrowRight, Code2, QrCode, Settings } from 'lucide-react'
 import { ShareTools } from './_components/share-tools'
 
 export default async function DashboardPage() {
@@ -28,6 +28,13 @@ export default async function DashboardPage() {
   ])
 
   const co = coRaw as any
+
+  const BUSINESS_TYPE_LABELS: Record<string, string> = {
+    business_services: 'Business Services Company',
+    online_b2c: 'Online B2C Company',
+    retail_chain: 'Retail Chain / Retail Store',
+    both: 'B2B + B2C',
+  }
   const categories = ((categoriesRaw ?? []) as any[]).map(r => r.categories).filter(Boolean)
   const products = (productsRaw ?? []) as any[]
   const recentReviews = (recentReviewsRaw ?? []) as any[]
@@ -127,6 +134,17 @@ export default async function DashboardPage() {
                   </div>
                 ))}
               </div>
+              {/* Company type */}
+              <div className="flex items-start gap-3 px-5 py-3 border-t border-slate-100">
+                <span className="text-xs font-black text-slate-400 w-24 flex-shrink-0 pt-0.5">Company type</span>
+                <span className="text-xs text-slate-700 font-bold flex-1">
+                  {BUSINESS_TYPE_LABELS[co.business_type] ?? co.business_type ?? 'Not set'}
+                </span>
+                <Link href="/dashboard/settings" className="text-xs font-black text-[#6d28d9] hover:underline flex-shrink-0">
+                  Change →
+                </Link>
+              </div>
+
               {/* Categories */}
               <div className="flex items-start gap-3 px-5 py-3 border-t border-slate-100">
                 <span className="text-xs font-black text-slate-400 w-24 flex-shrink-0 pt-0.5">Categories</span>
@@ -250,6 +268,16 @@ export default async function DashboardPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-black text-slate-700">QR code</p>
                     <p className="text-[10px] text-slate-400">Download print-ready PNG for proposals &amp; invoices</p>
+                  </div>
+                  <ArrowRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                </Link>
+                <Link href="/dashboard/settings" className="flex items-center gap-3 hover:bg-slate-50 rounded-xl px-1 py-1 -mx-1 transition-colors">
+                  <div className="h-7 w-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <Settings className="h-3.5 w-3.5 text-slate-500" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-slate-700">Company settings</p>
+                    <p className="text-[10px] text-slate-400">Update business type and other settings</p>
                   </div>
                   <ArrowRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
                 </Link>

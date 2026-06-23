@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: 'Add a company & write a review' }
 
 type Props = { searchParams: Promise<{ name?: string }> }
 
-type Category = { id: string; name: string; slug: string; icon: string | null }
+type Category = { id: string; name: string; slug: string; icon: string | null; parent_id: string | null; platform_type: 'b2b' | 'b2c' | 'both' }
 
 export default async function WriteReviewNewPage({ searchParams }: Props) {
   const { name = '' } = await searchParams
@@ -21,7 +21,7 @@ export default async function WriteReviewNewPage({ searchParams }: Props) {
 
   const { data: categoriesData } = await supabase
     .from('categories')
-    .select('id, name, slug, icon')
+    .select('id, name, slug, icon, platform_type')
     .eq('is_active', true)
     .order('sort_order')
 

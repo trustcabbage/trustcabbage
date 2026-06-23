@@ -1,6 +1,6 @@
-﻿'use client'
+'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Upload, X, Info } from 'lucide-react'
@@ -11,10 +11,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { StarRating } from '@/components/reviews/star-rating'
 import { createClient } from '@/lib/supabase/client'
+import { BusinessTypeSelector, type BusinessType } from '@/components/business-type-selector'
+import { getCategoriesByBusinessType } from '@/lib/get-categories-by-business-type'
 
-interface Category { id: string; name: string; slug: string; icon: string | null }
+interface Category { id: string; name: string; slug: string; icon: string | null; parent_id: string | null; platform_type: 'b2b' | 'b2c' | 'both' }
 
-const STEPS = ['Company details', 'Your relationship', 'Ratings', 'Your experience', 'Proof', 'Submit']
+const STEPS = ['Business type', 'Company details', 'Your relationship', 'Ratings', 'Your experience', 'Proof', 'Submit']
 
 const RATING_FACTORS = [
   { key: 'rating_staff', label: 'Staff behaviour', desc: 'How professional and helpful was their team?' },
@@ -62,6 +64,8 @@ export function NewCompanyReviewForm({
   const [websiteDuplicate, setWebsiteDuplicate] = useState<{ name: string; slug: string } | null>(null)
   const websiteDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const [businessType, setBusinessType] = useState<BusinessType | ''>('')
+
   const [company, setCompany] = useState({
     name: initialName,
     website: '',
@@ -86,6 +90,18 @@ export function NewCompanyReviewForm({
     additional_notes: '',
     is_anonymous: false,
   })
+
+  const filteredCategories = useMemo(() => {
+    if (!businessType) return categories
+    return getCategoriesByBusinessType(businessType, categories)
+  }, [businessType, categories])
+
+  // Reset category selection when business type changes and current selection is no longer valid
+  useEffect(() => {
+    if (company.category_id && !filteredCategories.find(c => c.id === company.category_id)) {
+      setCompany(prev => ({ ...prev, category_id: '' }))
+    }
+  }, [filteredCategories])
 
   useEffect(() => {
     const raw = company.website.trim()
@@ -112,10 +128,11 @@ export function NewCompanyReviewForm({
   }
 
   function canAdvance(): boolean {
-    if (step === 0) return company.website.trim().length >= 4 && company.name.trim().length >= 2 && !!company.category_id
-    if (step === 1) return !!(review.association_type && review.reviewer_role && review.engagement_phase && review.association_duration) && serviceTags.length > 0
-    if (step === 2) return Object.values(ratings).every(v => v > 0)
-    if (step === 3) return review.what_went_well.trim().length >= 20 && !!review.would_recommend
+    if (step === 0) return businessType !== ''
+    if (step === 1) return company.website.trim().length >= 4 && company.name.trim().length >= 2 && !!company.category_id
+    if (step === 2) return !!(review.association_type && review.reviewer_role && review.engagement_phase && review.association_duration) && serviceTags.length > 0
+    if (step === 3) return Object.values(ratings).every(v => v > 0)
+    if (step === 4) return review.what_went_well.trim().length >= 20 && !!review.would_recommend
     return true
   }
 
@@ -158,6 +175,7 @@ export function NewCompanyReviewForm({
         state: company.state || null,
         status: 'unclaimed',
         created_by: userId,
+        business_type: businessType || 'business_services',
       })
       .select('id, slug')
       .single()
@@ -244,8 +262,23 @@ export function NewCompanyReviewForm({
       {/* Animated step wrapper */}
       <div key={step} className="animate-in fade-in slide-in-from-bottom-3 duration-300">
 
-      {/* Step 0: Company details */}
+      {/* Step 0: Business type */}
       {step === 0 && (
+        <div className="space-y-5">
+          <div className="flex items-start gap-2 rounded-xl bg-violet-50 border border-violet-200 p-4 text-sm text-slate-700">
+            <Info className="h-4 w-4 text-[#6d28d9] mt-0.5 flex-shrink-0" />
+            <p>This helps us show the right categories and review questions for the company you&apos;re adding.</p>
+          </div>
+          <h2 className="text-lg font-black text-slate-950">What type of company is this?</h2>
+          <BusinessTypeSelector
+            value={businessType}
+            onChange={(v) => setBusinessType(v)}
+          />
+        </div>
+      )}
+
+      {/* Step 1: Company details */}
+      {step === 1 && (
         <div className="space-y-5">
           <div className="flex items-start gap-2 rounded-xl bg-violet-50 border border-violet-200 p-4 text-sm text-slate-700">
             <Info className="h-4 w-4 text-[#6d28d9] mt-0.5 flex-shrink-0" />
@@ -310,7 +343,7 @@ export function NewCompanyReviewForm({
                 className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-950 focus:border-[#6d28d9] focus:outline-none focus:ring-1 focus:ring-[#6d28d9] transition-colors cursor-pointer pr-10"
               >
                 <option value="" disabled>Select a category</option>
-                {categories.map(cat => (
+                {filteredCategories.map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
@@ -342,8 +375,8 @@ export function NewCompanyReviewForm({
         </div>
       )}
 
-      {/* Step 1: Your relationship */}
-      {step === 1 && (
+      {/* Step 2: Your relationship */}
+      {step === 2 && (
         <div className="space-y-5">
           <h2 className="text-lg font-black text-slate-950">Your relationship with {company.name}</h2>
           <div className="space-y-1.5">
@@ -411,8 +444,8 @@ export function NewCompanyReviewForm({
         </div>
       )}
 
-      {/* Step 2: Ratings */}
-      {step === 2 && (
+      {/* Step 3: Ratings */}
+      {step === 3 && (
         <div className="space-y-6">
           <h2 className="text-lg font-black text-slate-950">Rate your experience</h2>
           <p className="text-sm text-slate-500">Rate each factor from 1 (poor) to 5 (excellent).</p>
@@ -441,8 +474,8 @@ export function NewCompanyReviewForm({
         </div>
       )}
 
-      {/* Step 3: Written experience */}
-      {step === 3 && (
+      {/* Step 4: Written experience */}
+      {step === 4 && (
         <div className="space-y-5">
           <h2 className="text-lg font-black text-slate-950">Share your experience</h2>
           <div className="space-y-1.5">
@@ -526,8 +559,8 @@ export function NewCompanyReviewForm({
         </div>
       )}
 
-      {/* Step 4: Proof upload */}
-      {step === 4 && (
+      {/* Step 5: Proof upload */}
+      {step === 5 && (
         <div className="space-y-5">
           <h2 className="text-lg font-black text-slate-950">Verify your experience <span className="text-slate-400 font-normal text-base">(optional)</span></h2>
           <p className="text-sm text-slate-500">
@@ -564,8 +597,8 @@ export function NewCompanyReviewForm({
         </div>
       )}
 
-      {/* Step 5: Submit */}
-      {step === 5 && (
+      {/* Step 6: Submit */}
+      {step === 6 && (
         <div className="space-y-5">
           <h2 className="text-lg font-black text-slate-950">Review your submission</h2>
           <div className="rounded-xl border border-slate-200 p-5 space-y-4 text-sm bg-slate-50">
@@ -632,7 +665,7 @@ export function NewCompanyReviewForm({
             disabled={!canAdvance()}
             className="rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-6 py-2.5 text-sm disabled:opacity-40 disabled:pointer-events-none transition-colors"
           >
-            {step === 4 ? (proofFile ? 'Continue' : 'Skip') : 'Continue'}
+            {step === 5 ? (proofFile ? 'Continue' : 'Skip') : 'Continue'}
           </button>
         ) : (
           <button

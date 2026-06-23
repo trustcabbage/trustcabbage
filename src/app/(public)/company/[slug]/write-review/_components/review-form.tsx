@@ -11,6 +11,7 @@ import { StarRating } from '@/components/reviews/star-rating'
 import { createClient } from '@/lib/supabase/client'
 import { TagInput } from '@/components/tags/tag-input'
 import { resolveTags, type TagChip } from '@/lib/tags'
+import { B2cReviewForm } from './b2c-review-form'
 
 interface Product { id: string; name: string; type: string }
 interface Company { id: string; name: string; slug: string }
@@ -47,7 +48,7 @@ interface FormData {
 
 const initialRatings = Object.fromEntries(RATING_FACTORS.map(f => [f.key, 0])) as Record<RatingKey, number>
 
-export function ReviewForm({ company, products, userId, isUnclaimed = false, refToken = null, reviewSource = null, isEmbed = false }: { company: Company; products: Product[]; userId: string; isUnclaimed?: boolean; refToken?: string | null; reviewSource?: string | null; isEmbed?: boolean }) {
+export function ReviewForm({ company, products, userId, isUnclaimed = false, refToken = null, reviewSource = null, isEmbed = false, businessType = 'business_services' }: { company: Company; products: Product[]; userId: string; isUnclaimed?: boolean; refToken?: string | null; reviewSource?: string | null; isEmbed?: boolean; businessType?: string }) {
   const router = useRouter()
   const supabase = createClient()
   const [step, setStep] = useState(0)
@@ -71,6 +72,12 @@ export function ReviewForm({ company, products, userId, isUnclaimed = false, ref
     additional_notes: '',
     is_anonymous: false,
     proof_document_url: null,
+  })
+  // Determines which form branch to render
+  const [reviewType, setReviewType] = useState<'b2b' | 'b2c' | ''>(() => {
+    if (businessType === 'business_services') return 'b2b'
+    if (businessType === 'online_b2c' || businessType === 'retail_chain') return 'b2c'
+    return '' // 'both': user must choose
   })
 
   function update(patch: Partial<FormData>) {
@@ -179,6 +186,54 @@ export function ReviewForm({ company, products, userId, isUnclaimed = false, ref
     }
   }
 
+  // For 'both' companies: ask reviewer how they're engaging before showing a form
+  if (businessType === 'both' && !reviewType) {
+    return (
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-5">
+        <h2 className="text-lg font-black text-slate-950">How are you reviewing {company.name}?</h2>
+        <p className="text-sm text-slate-500">
+          {company.name} serves both businesses and individual consumers. Please choose which experience you are sharing.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setReviewType('b2b')}
+            className="flex flex-col gap-2 p-5 rounded-xl border-2 border-slate-200 hover:border-[#6d28d9] hover:bg-violet-50 text-left transition-colors group"
+          >
+            <span className="text-2xl">🏢</span>
+            <p className="font-black text-slate-950 group-hover:text-[#6d28d9]">As a business client</p>
+            <p className="text-xs text-slate-500">You hired or evaluated them as a vendor or service provider</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => setReviewType('b2c')}
+            className="flex flex-col gap-2 p-5 rounded-xl border-2 border-slate-200 hover:border-[#6d28d9] hover:bg-violet-50 text-left transition-colors group"
+          >
+            <span className="text-2xl">🛍️</span>
+            <p className="font-black text-slate-950 group-hover:text-[#6d28d9]">As an individual consumer</p>
+            <p className="text-xs text-slate-500">You purchased a product or service for personal use</p>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // For B2C or 'both' companies where the reviewer chose consumer
+  if (reviewType === 'b2c') {
+    return (
+      <B2cReviewForm
+        company={company}
+        products={products}
+        userId={userId}
+        isRetail={businessType === 'retail_chain'}
+        refToken={refToken}
+        reviewSource={reviewSource}
+        isEmbed={isEmbed}
+      />
+    )
+  }
+
+  // Default: B2B form (business_services, or 'both' companies where reviewer chose b2b)
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
       {/* Step indicator */}

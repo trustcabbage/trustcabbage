@@ -25,9 +25,8 @@ export function Navbar({ user }: { user: NavUser | null }) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#1e1b4b]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex h-14 items-center justify-between">
-        <Link href="/" className="flex items-center gap-1.5">
-          <span className="text-lg font-black text-white tracking-tight">Trust</span>
-          <span className="text-lg font-black text-[#a78bfa] tracking-tight">Cabbage</span>
+        <Link href="/" className="flex items-center">
+          <img src="/logo-icon.png.png" alt="Trust Cabbage" className="h-9 w-auto" />
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm font-bold">
@@ -36,6 +35,9 @@ export function Navbar({ user }: { user: NavUser | null }) {
           </Link>
           <Link href="/search" className="text-violet-200 hover:text-white transition-colors">
             Search
+          </Link>
+          <Link href="/write-review" className="text-violet-200 hover:text-white transition-colors">
+            Write a review
           </Link>
         </nav>
 

@@ -6,7 +6,22 @@ import { FeatureManager } from './_components/feature-manager'
 type Category = {
   id: string; name: string; slug: string; icon: string | null; description: string | null
   image_url: string | null; is_active: boolean; parent_id: string | null; sort_order: number; is_featured: boolean
+  platform_type: 'b2b' | 'b2c' | 'both'
 }
+
+const PLATFORM_BADGE: Record<string, { label: string; cls: string }> = {
+  b2b:  { label: 'B2B',  cls: 'bg-blue-100 text-blue-800' },
+  b2c:  { label: 'B2C',  cls: 'bg-rose-100 text-rose-800' },
+  both: { label: 'Both', cls: 'bg-amber-100 text-amber-800' },
+}
+
+const platformTypeSelect = (defaultValue?: string) => (
+  <select name="platform_type" defaultValue={defaultValue ?? 'b2b'} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-950 focus:border-[#6d28d9] focus:outline-none focus:ring-1 focus:ring-[#6d28d9] bg-white">
+    <option value="b2b">B2B — Business services</option>
+    <option value="b2c">B2C — Consumer brands</option>
+    <option value="both">Both — Serves B2B and B2C</option>
+  </select>
+)
 
 const inputCls = "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-950 placeholder:text-slate-400 focus:border-[#6d28d9] focus:outline-none focus:ring-1 focus:ring-[#6d28d9]"
 const labelCls = "text-xs font-black uppercase tracking-wide text-slate-400"
@@ -15,7 +30,7 @@ export default async function AdminCategoriesPage() {
   const supabase = await createClient()
   const { data } = await supabase
     .from('categories')
-    .select('id, name, slug, icon, image_url, description, is_active, parent_id, sort_order, is_featured')
+    .select('id, name, slug, icon, image_url, description, is_active, parent_id, sort_order, is_featured, platform_type')
     .order('sort_order')
 
   const all = (data as unknown as Category[]) ?? []
@@ -51,6 +66,10 @@ export default async function AdminCategoriesPage() {
             <div className="space-y-1.5">
               <label className={labelCls}>Icon emoji</label>
               <EmojiPicker name="icon" />
+            </div>
+            <div className="space-y-1.5">
+              <label className={labelCls}>Platform type</label>
+              {platformTypeSelect()}
             </div>
           </div>
           <div className="space-y-1.5">
@@ -92,6 +111,11 @@ export default async function AdminCategoriesPage() {
                   <span className="font-black text-slate-950">{parent.name}</span>
                   <code className="text-xs text-slate-400 font-mono">{parent.slug}</code>
                   {parent.is_featured && <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-black text-[#6d28d9]">Featured</span>}
+                  {PLATFORM_BADGE[parent.platform_type] && (
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-black ${PLATFORM_BADGE[parent.platform_type].cls}`}>
+                      {PLATFORM_BADGE[parent.platform_type].label}
+                    </span>
+                  )}
                   <span className={`rounded-full px-2 py-0.5 text-xs font-black ${parent.is_active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-500'}`}>
                     {parent.is_active ? 'Active' : 'Inactive'}
                   </span>
@@ -142,6 +166,10 @@ export default async function AdminCategoriesPage() {
                         <label className={labelCls}>Icon emoji</label>
                         <EmojiPicker name="icon" defaultValue={parent.icon ?? ''} />
                       </div>
+                      <div className="space-y-1">
+                        <label className={labelCls}>Platform type</label>
+                        {platformTypeSelect(parent.platform_type)}
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <label className={labelCls}>Hero image URL <span className="normal-case font-normal text-slate-400">(optional)</span></label>
@@ -180,6 +208,11 @@ export default async function AdminCategoriesPage() {
                           {child.icon && <span>{child.icon}</span>}
                           <span className="font-bold text-slate-700 text-sm">{child.name}</span>
                           <code className="text-xs text-slate-400 font-mono">{child.slug}</code>
+                          {PLATFORM_BADGE[child.platform_type] && (
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-black ${PLATFORM_BADGE[child.platform_type].cls}`}>
+                              {PLATFORM_BADGE[child.platform_type].label}
+                            </span>
+                          )}
                           <span className={`rounded-full px-2 py-0.5 text-xs font-black ${child.is_active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-500'}`}>
                             {child.is_active ? 'Active' : 'Inactive'}
                           </span>
@@ -221,6 +254,10 @@ export default async function AdminCategoriesPage() {
                               <div className="space-y-1">
                                 <label className={labelCls}>Icon emoji</label>
                                 <EmojiPicker name="icon" defaultValue={child.icon ?? ''} />
+                              </div>
+                              <div className="space-y-1">
+                                <label className={labelCls}>Platform type</label>
+                                {platformTypeSelect(child.platform_type)}
                               </div>
                             </div>
                             <div className="space-y-1">
