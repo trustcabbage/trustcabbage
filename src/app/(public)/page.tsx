@@ -298,6 +298,7 @@ export default async function HomePage() {
                 <Link
                   key={company.id}
                   href={`/company/${company.slug}`}
+                  prefetch={false}
                   className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all flex gap-3 shadow-sm"
                 >
                   <div className="h-11 w-11 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">

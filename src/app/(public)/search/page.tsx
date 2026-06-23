@@ -395,6 +395,7 @@ export default async function SearchPage({ searchParams }: Props) {
                   <Link
                     key={company.id}
                     href={`/company/${company.slug}`}
+                    prefetch={false}
                     className="flex gap-4 p-5 rounded-xl border border-slate-200 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all shadow-sm"
                   >
                     <div className="h-14 w-14 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -471,6 +472,7 @@ export default async function SearchPage({ searchParams }: Props) {
                   <Link
                     key={product.id}
                     href={product.companies ? `/company/${product.companies.slug}` : '#'}
+                    prefetch={false}
                     className="flex gap-4 p-5 rounded-xl border border-slate-200 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all shadow-sm"
                   >
                     <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">

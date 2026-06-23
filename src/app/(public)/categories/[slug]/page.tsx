@@ -428,6 +428,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
                   return (
                     <Link key={company.id} href={`/company/${company.slug}`}
+                      prefetch={false}
                       className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all flex gap-4 shadow-sm group">
                       <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {company.logo_url
