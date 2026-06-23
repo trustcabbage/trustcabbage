@@ -606,3 +606,52 @@ id, review_id, company_id, responder_id, body, created_at
 | 010 | B2C schema: `companies.business_type`, `categories.platform_type`, `reviews.review_type` + 14 B2C columns, `audit_log`, B2B rating columns made nullable |
 | 011 | B2C categories seeded (~12 parent + ~50 subcategories) |
 | 012 | All categories classified by `platform_type` |
+
+---
+
+## Crawler & Traffic Safeguards
+
+Six-layer defence. All layers are live. Request flow:
+
+```
+Incoming request
+  ├─ L2: Known scraper bot?         → 403  (no DB, no function)
+  ├─ L3: Country ≠ IN?              → 403  (except Googlebot/Bingbot/DuckDuckBot)
+  ├─ Next-Router-Prefetch header?   → pass (skip rate limit)
+  ├─ L4: > 120 req/min (same IP)?   → 429
+  └─ Page function runs
+       ├─ L6: Data in cache?        → served, no DB query
+       └─ Cache miss                → Supabase queried, cached for next N seconds
+```
+
+| Layer | File | What it does |
+|---|---|---|
+| L1 Region | `vercel.json` | Serverless functions run in Mumbai (`bom1`) — close to Supabase India region |
+| L2 Bot block | `src/middleware.ts` | Hard 403 on User-Agent match — no function invoked, no DB hit |
+| L3 Geo-block | `src/middleware.ts` | Non-IN requests blocked; search engine bots always pass (they crawl from US) |
+| L4 Rate limit | `src/middleware.ts` | 120 req/min per IP via Upstash Redis sliding window; prefetches exempt |
+| L5 robots.txt | `src/app/robots.ts` | Advisory disallow for audit bots + 10s crawl delay; L2 enforces this hard |
+| L6 Cache | `src/app/sitemap.ts` + data files | `unstable_cache` wraps expensive DB fetches; revalidate every 60–3600s |
+
+**Required env vars** (add to Vercel project settings):
+```
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+```
+Middleware fails open if these are absent — site remains functional, rate limiting is skipped.
+
+**Blocked bots (L2):** serpstatbot, ahrefsbot, semrushbot, mj12bot, dotbot, blexbot, petalbot, baiduspider, yandexbot, majestic, rogerbot, exabot, uptimerobot, pingdom, statuscake
+
+**Never block:** googlebot, bingbot, duckduckbot, slurp — these drive organic search rankings.
+
+**Applying L6 to a new expensive query:**
+```ts
+import { unstable_cache } from 'next/cache'
+
+export const getExpensiveData = unstable_cache(
+  async () => { /* Supabase queries */ },
+  ['unique-cache-key'],
+  { revalidate: 60 }
+)
+```
+Invalidate on mutation: call `revalidatePath('/affected-route')` inside the relevant server action.
