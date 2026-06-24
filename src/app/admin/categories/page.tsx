@@ -6,7 +6,7 @@ import { FeatureManager } from './_components/feature-manager'
 type Category = {
   id: string; name: string; slug: string; icon: string | null; description: string | null
   image_url: string | null; is_active: boolean; parent_id: string | null; sort_order: number; is_featured: boolean
-  platform_type: 'b2b' | 'b2c' | 'both'
+  platform_type: 'b2b' | 'b2c' | 'both'; search_tags: string | null
 }
 
 const PLATFORM_BADGE: Record<string, { label: string; cls: string }> = {
@@ -30,7 +30,7 @@ export default async function AdminCategoriesPage() {
   const supabase = await createClient()
   const { data } = await supabase
     .from('categories')
-    .select('id, name, slug, icon, image_url, description, is_active, parent_id, sort_order, is_featured, platform_type')
+    .select('id, name, slug, icon, image_url, description, is_active, parent_id, sort_order, is_featured, platform_type, search_tags')
     .order('sort_order')
 
   const all = (data as unknown as Category[]) ?? []
@@ -83,6 +83,14 @@ export default async function AdminCategoriesPage() {
               rows={4}
               placeholder="Full description shown on the category page. Explain what services fall under this category, who it's for, etc."
               className={`${inputCls} resize-y min-h-[100px]`}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className={labelCls}>Search tags <span className="normal-case font-normal text-slate-400">— space or comma separated aliases for home search (e.g. "esign api digital contracts e-signature")</span></label>
+            <input
+              name="search_tags"
+              placeholder="e.g. esign api digital contracts e-signature document automation"
+              className={inputCls}
             />
           </div>
           <div className="flex items-center gap-4 pt-1">
@@ -138,7 +146,7 @@ export default async function AdminCategoriesPage() {
               )}
 
               {/* Inline edit (details/summary) */}
-              <details className="border-b border-slate-100">
+              <details key={`edit-${parent.id}-${parent.search_tags ?? ''}-${parent.name}`} className="border-b border-slate-100">
                 <summary className="px-5 py-2.5 text-xs font-black text-[#6d28d9] cursor-pointer hover:bg-violet-50 transition-colors list-none flex items-center gap-1">
                   ✏️ Edit this category
                 </summary>
@@ -185,6 +193,15 @@ export default async function AdminCategoriesPage() {
                         className={`${inputCls} resize-y min-h-[100px]`}
                       />
                     </div>
+                    <div className="space-y-1">
+                      <label className={labelCls}>Search tags <span className="normal-case font-normal text-slate-400">— aliases for home search autocomplete</span></label>
+                      <input
+                        name="search_tags"
+                        defaultValue={parent.search_tags ?? ''}
+                        placeholder="e.g. esign api digital contracts e-signature"
+                        className={inputCls}
+                      />
+                    </div>
                     <div className="flex items-center gap-4">
                       <button type="submit" className="rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-5 py-2 text-sm transition-colors">
                         Save changes
@@ -227,7 +244,7 @@ export default async function AdminCategoriesPage() {
                       </div>
 
                       {/* Subcategory inline edit */}
-                      <details className="border-t border-slate-50">
+                      <details key={`edit-${child.id}-${child.search_tags ?? ''}-${child.name}`} className="border-t border-slate-50">
                         <summary className="px-5 py-2 pl-10 text-xs font-black text-[#6d28d9] cursor-pointer hover:bg-violet-50 transition-colors list-none">
                           ✏️ Edit
                         </summary>
@@ -272,6 +289,15 @@ export default async function AdminCategoriesPage() {
                                 defaultValue={child.description ?? ''}
                                 placeholder="Description…"
                                 className={`${inputCls} resize-y min-h-[80px]`}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className={labelCls}>Search tags <span className="normal-case font-normal text-slate-400">— aliases for home search autocomplete</span></label>
+                              <input
+                                name="search_tags"
+                                defaultValue={child.search_tags ?? ''}
+                                placeholder="e.g. skincare moisturiser face cream beauty"
+                                className={inputCls}
                               />
                             </div>
                             <button type="submit" className="rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-5 py-2 text-sm transition-colors">

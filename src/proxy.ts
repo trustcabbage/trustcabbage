@@ -9,7 +9,13 @@ const BLOCKED_BOTS = [
   'blexbot', 'petalbot', 'baiduspider', 'yandexbot', 'majestic',
   'rogerbot', 'exabot', 'uptimerobot', 'pingdom', 'statuscake',
 ]
-const SEARCH_ENGINE_BOTS = ['googlebot', 'bingbot', 'duckduckbot', 'slurp']
+const SEARCH_ENGINE_BOTS = [
+  // Google — all official crawlers (crawl from US, must pass geo-block)
+  'googlebot', 'google-inspectiontool', 'googlebot-image', 'googlebot-news',
+  'adsbot-google', 'mediapartners-google', 'apis-google', 'feedfetcher-google',
+  // Other search engines
+  'bingbot', 'duckduckbot', 'slurp',
+]
 
 const isBlockedBot   = (ua: string) => BLOCKED_BOTS.some(b => ua.toLowerCase().includes(b))
 const isSearchEngine = (ua: string) => SEARCH_ENGINE_BOTS.some(b => ua.toLowerCase().includes(b))

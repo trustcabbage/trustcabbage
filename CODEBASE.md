@@ -642,7 +642,7 @@ Middleware fails open if these are absent — site remains functional, rate limi
 
 **Blocked bots (L2):** serpstatbot, ahrefsbot, semrushbot, mj12bot, dotbot, blexbot, petalbot, baiduspider, yandexbot, majestic, rogerbot, exabot, uptimerobot, pingdom, statuscake
 
-**Never block:** googlebot, bingbot, duckduckbot, slurp — these drive organic search rankings.
+**Never block (search engines only):** googlebot, google-inspectiontool, googlebot-image, googlebot-news, adsbot-google, mediapartners-google, apis-google, feedfetcher-google, bingbot, duckduckbot, slurp. Note: Google Search Console's URL Inspection Tool sends `Google-InspectionTool` (not `googlebot`) — must be in the exemption list or GSC reports 403.
 
 **Applying L6 to a new expensive query:**
 ```ts

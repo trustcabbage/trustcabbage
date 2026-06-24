@@ -22,10 +22,11 @@ export async function createCategory(formData: FormData) {
   const parent_id = (formData.get('parent_id') as string)?.trim() || null
   const is_featured = formData.get('is_featured') === '1'
   const platform_type = (formData.get('platform_type') as string)?.trim() || 'b2b'
+  const search_tags = (formData.get('search_tags') as string)?.trim() || null
 
   if (!name || !slug) return
 
-  await supabase.from('categories').insert({ name, slug, description, icon, image_url, is_active: true, parent_id, is_featured, platform_type })
+  await supabase.from('categories').insert({ name, slug, description, icon, image_url, is_active: true, parent_id, is_featured, platform_type, search_tags })
   revalidatePath('/admin/categories')
 }
 
@@ -79,9 +80,10 @@ export async function updateCategory(id: string, formData: FormData) {
   const parent_id = (formData.get('parent_id') as string)?.trim() || null
   const is_featured = formData.get('is_featured') === '1'
   const platform_type = (formData.get('platform_type') as string)?.trim() || 'b2b'
+  const search_tags = (formData.get('search_tags') as string)?.trim() || null
 
   if (!name || !slug) return
 
-  await supabase.from('categories').update({ name, slug, description, icon, image_url, parent_id, is_featured, platform_type }).eq('id', id)
+  await supabase.from('categories').update({ name, slug, description, icon, image_url, parent_id, is_featured, platform_type, search_tags }).eq('id', id)
   revalidatePath('/admin/categories')
 }

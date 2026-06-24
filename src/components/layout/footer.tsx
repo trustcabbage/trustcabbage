@@ -45,9 +45,9 @@ export function Footer() {
           <div>
             <p className="font-black text-white mb-4">Company</p>
             <ul className="space-y-2.5 text-slate-400 text-xs">
-              <li><span className="opacity-50 cursor-not-allowed">About Trust Cabbage</span></li>
-              <li><span className="opacity-50 cursor-not-allowed">Our review policy</span></li>
-              <li><span className="opacity-50 cursor-not-allowed">Anti-fake commitment</span></li>
+              <li><Link href="/about" className="hover:text-white transition-colors">About Trust Cabbage</Link></li>
+              <li><Link href="/review-policy" className="hover:text-white transition-colors">Our review policy</Link></li>
+              <li><Link href="/anti-fake-commitment" className="hover:text-white transition-colors">Anti-fake commitment</Link></li>
               <li><span className="opacity-50 cursor-not-allowed">Blog</span></li>
               <li><span className="opacity-50 cursor-not-allowed">Contact us</span></li>
             </ul>

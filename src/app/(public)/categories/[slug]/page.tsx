@@ -87,14 +87,20 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   let companies: CompanyRow[] = []
   let stateOptions: string[] = []
   const excerptByCompanyId: Record<string, string> = {}
+  const companyCatIds: Record<string, string[]> = {}
 
   if (!featureFilterEmpty) {
     const { data: ccRows } = await supabase
       .from('company_categories')
-      .select('company_id')
+      .select('company_id, category_id')
       .in('category_id', allCategoryIds)
 
-    let companyIds = [...new Set(((ccRows ?? []) as any[]).map((r: any) => r.company_id as string))]
+    for (const r of (ccRows ?? []) as any[]) {
+      if (!companyCatIds[r.company_id]) companyCatIds[r.company_id] = []
+      companyCatIds[r.company_id].push(r.category_id)
+    }
+
+    let companyIds = Object.keys(companyCatIds)
 
     if (featureFilterIds && featureFilterIds.length > 0) {
       const featureSet = new Set(featureFilterIds)
@@ -151,6 +157,15 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const modelSet = new Map<string, string>()
   companies.forEach(c => { if (c.business_models) modelSet.set(c.business_models.slug, c.business_models.name) })
   const availableModels = Array.from(modelSet.entries()).map(([slug, name]) => ({ slug, name }))
+
+  // Subcategory pill data — only relevant on parent category pages
+  const subcategoryById: Record<string, SidebarRow> = !category.parent_id
+    ? Object.fromEntries(sidebar.map(s => [s.id, s]))
+    : {}
+  const hasInheritedCompanies = !category.parent_id && companies.some(c => {
+    const cats = companyCatIds[c.id] ?? []
+    return !cats.includes(category.id) && cats.some(id => subcategoryById[id])
+  })
 
   const buildHref = (overrides: Record<string, string | undefined>) => {
     const p: Record<string, string> = {
@@ -401,6 +416,15 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               </div>
             )}
 
+            {hasInheritedCompanies && (
+              <div className="flex items-start gap-2 rounded-xl bg-violet-50 border border-violet-100 px-4 py-3 mb-4 text-xs text-slate-600">
+                <span className="flex-shrink-0 mt-px">ℹ️</span>
+                <span>
+                  Showing all companies in <strong>{category.name}</strong>. Each card shows the section it belongs to — use the sidebar to narrow down by section.
+                </span>
+              </div>
+            )}
+
             <p className="text-xs text-slate-400 mb-4 font-bold">
               {companyCount} {companyCount === 1 ? 'company' : 'companies'}
               {hasFilters ? ' (filtered)' : ''}
@@ -425,6 +449,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                     .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999))
                     .slice(0, 2)
                   const excerpt = excerptByCompanyId[company.id]
+                  const companyCats = companyCatIds[company.id] ?? []
+                  const subcatPills = !category.parent_id && !companyCats.includes(category.id)
+                    ? companyCats.filter(id => subcategoryById[id]).map(id => subcategoryById[id])
+                    : []
 
                   return (
                     <Link key={company.id} href={`/company/${company.slug}`}
@@ -441,6 +469,15 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                           {company.is_verified && <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-black text-violet-700 flex-shrink-0">Verified</span>}
                           {company.business_models && <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-black text-purple-700 flex-shrink-0">{company.business_models.name}</span>}
                         </div>
+                        {subcatPills.length > 0 && (
+                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            {subcatPills.map(sub => (
+                              <span key={sub.id} className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-black text-violet-700 flex-shrink-0">
+                                {sub.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
 
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           {(company.city || company.state) && (

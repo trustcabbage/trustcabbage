@@ -64,8 +64,8 @@ export function HomeSearch() {
         { data: coData }, { data: catData }, { data: subData }, { data: prodData }, { data: tagData },
       ] = await Promise.all([
         supabase.from('companies').select('id, name, slug, logo_url, average_rating, total_reviews').ilike('name', `%${term}%`).limit(4),
-        supabase.from('categories').select('id, name, slug, icon').is('parent_id', null).ilike('name', `%${term}%`).eq('is_active', true).limit(4),
-        supabase.from('categories').select('id, name, slug, parent:parent_id(id, name, slug, icon)').not('parent_id', 'is', null).ilike('name', `%${term}%`).limit(4),
+        supabase.from('categories').select('id, name, slug, icon').is('parent_id', null).or(`name.ilike.%${term}%,search_tags.ilike.%${term}%`).eq('is_active', true).limit(4),
+        supabase.from('categories').select('id, name, slug, parent:parent_id(id, name, slug, icon)').not('parent_id', 'is', null).or(`name.ilike.%${term}%,search_tags.ilike.%${term}%`).limit(4),
         supabase.from('products_services').select('id, name, type, companies(name, slug)').ilike('name', `%${term}%`).eq('is_active', true).limit(4),
         supabase.from('tags').select('id, name, slug, usage_count').or(`name.ilike.%${term}%,slug.ilike.%${term}%`).neq('type', 'sentiment').order('usage_count', { ascending: false }).limit(4),
       ])
