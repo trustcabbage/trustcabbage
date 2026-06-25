@@ -16,6 +16,11 @@ export const metadata: Metadata = {
   },
   description: 'Read and write verified reviews for Indian B2B companies. Find trusted agencies, SaaS products, logistics providers, and more.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://trustcabbage.com'),
+  icons: {
+    icon: '/app-icon.png.png',
+    apple: '/app-icon.png.png',
+    shortcut: '/app-icon.png.png',
+  },
   openGraph: {
     siteName: 'Trust Cabbage',
     type: 'website',

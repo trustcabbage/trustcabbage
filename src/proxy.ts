@@ -9,16 +9,8 @@ const BLOCKED_BOTS = [
   'blexbot', 'petalbot', 'baiduspider', 'yandexbot', 'majestic',
   'rogerbot', 'exabot', 'uptimerobot', 'pingdom', 'statuscake',
 ]
-const SEARCH_ENGINE_BOTS = [
-  // Google — all official crawlers (crawl from US, must pass geo-block)
-  'googlebot', 'google-inspectiontool', 'googlebot-image', 'googlebot-news',
-  'adsbot-google', 'mediapartners-google', 'apis-google', 'feedfetcher-google',
-  // Other search engines
-  'bingbot', 'duckduckbot', 'slurp',
-]
 
-const isBlockedBot   = (ua: string) => BLOCKED_BOTS.some(b => ua.toLowerCase().includes(b))
-const isSearchEngine = (ua: string) => SEARCH_ENGINE_BOTS.some(b => ua.toLowerCase().includes(b))
+const isBlockedBot = (ua: string) => BLOCKED_BOTS.some(b => ua.toLowerCase().includes(b))
 
 // ── Layer 4: Rate limiter (module-level — reused across warm instances) ───────
 const ratelimit =
@@ -38,12 +30,6 @@ export async function proxy(request: NextRequest) {
 
   // Layer 2 — block known scrapers before anything runs
   if (isBlockedBot(ua)) {
-    return new NextResponse('Forbidden', { status: 403 })
-  }
-
-  // Layer 3 — India-only geo-block (x-vercel-ip-country is null in local dev → skipped)
-  const country = request.headers.get('x-vercel-ip-country')
-  if (country && country !== 'IN' && !isSearchEngine(ua)) {
     return new NextResponse('Forbidden', { status: 403 })
   }
 

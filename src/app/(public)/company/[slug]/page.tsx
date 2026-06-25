@@ -8,7 +8,7 @@ import { StarRating } from '@/components/reviews/star-rating'
 import { ReviewCard } from './_components/review-card'
 import { RatingBreakdown } from './_components/rating-breakdown'
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ tag?: string; already_reviewed?: string; own_company?: string; assoc?: string; sort?: string }> }
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ tag?: string; already_reviewed?: string; own_company?: string; assoc?: string; sort?: string; tab?: string }> }
 
 const ASSOC_LABELS: Record<string, string> = {
   current_client: 'Current client',
@@ -62,7 +62,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CompanyPage({ params, searchParams }: Props) {
   const { slug } = await params
-  const { tag: activeTag = '', already_reviewed, own_company, assoc: activeAssoc = '', sort: reviewSort = 'newest' } = await searchParams
+  const { tag: activeTag = '', already_reviewed, own_company, assoc: activeAssoc = '', sort: reviewSort = 'newest', tab } = await searchParams
+  const activeTab = (tab === 'reviews' || tab === 'products' || tab === 'about') ? tab : 'overview'
   const supabase = await createClient()
 
   // Determine if viewer is company admin for this page (needed for reply button)
@@ -203,6 +204,35 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     return acc
   }, {})
 
+  // Sentiment summary
+  const reviewsWithRec = reviews.filter((r: any) => r.would_recommend !== null && r.would_recommend !== undefined)
+  const recommendCount = reviewsWithRec.filter((r: any) => r.would_recommend === 'yes').length
+  const recommendPct = reviewsWithRec.length > 0 ? Math.round(recommendCount / reviewsWithRec.length * 100) : null
+  const sentimentTagCounts = new Map<string, { name: string; count: number; isPositive: boolean }>()
+  ;((rawReviewTags ?? []) as any[]).forEach((rt: any) => {
+    if (rt.tag_context === 'sentiment' && rt.tags) {
+      const prev = sentimentTagCounts.get(rt.tags.slug) ?? { name: rt.tags.name, count: 0, isPositive: new Set(['satisfied','recommended','good-value','great-support','fast-delivery','professional','transparent','reliable','satisfied-with-product']).has(rt.tags.slug) }
+      sentimentTagCounts.set(rt.tags.slug, { ...prev, count: prev.count + 1 })
+    }
+  })
+  const topSentimentTags = Array.from(sentimentTagCounts.values()).sort((a, b) => b.count - a.count).slice(0, 5)
+
+  // Competitors: same categories, exclude current, top by rating
+  type Competitor = { id: string; name: string; slug: string; logo_url: string | null; average_rating: number; total_reviews: number }
+  let competitors: Competitor[] = []
+  if (categories.length > 0) {
+    const categoryIds = categories.map((c: any) => c.id)
+    const { data: ccRows } = await supabase
+      .from('company_categories').select('company_id').in('category_id', categoryIds)
+    const cIds = [...new Set(((ccRows ?? []) as any[]).map((r: any) => r.company_id as string))].filter(id => id !== company.id).slice(0, 30)
+    if (cIds.length > 0) {
+      const { data: compData } = await supabase
+        .from('companies').select('id, name, slug, logo_url, average_rating, total_reviews')
+        .in('id', cIds).gt('total_reviews', 0).order('average_rating', { ascending: false }).limit(4)
+      competitors = (compData ?? []) as unknown as Competitor[]
+    }
+  }
+
   const schemaOrg = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -233,6 +263,49 @@ export default async function CompanyPage({ params, searchParams }: Props) {
       reviewBody: r.what_went_well,
     })),
   }
+
+  // Build review filter href helper (preserves tab param)
+  const buildReviewHref = (override: Record<string, string | undefined>) => {
+    const rp: Record<string, string> = {}
+    if (activeTab !== 'overview') rp.tab = activeTab
+    if (activeTag) rp.tag = activeTag
+    if (activeAssoc) rp.assoc = activeAssoc
+    if (reviewSort !== 'newest') rp.sort = reviewSort
+    Object.entries(override).forEach(([k, v]) => { if (v === undefined) delete rp[k]; else rp[k] = v })
+    const qs = new URLSearchParams(rp).toString()
+    return `/company/${slug}${qs ? '?' + qs : ''}`
+  }
+
+  const companyDetailsList = (
+    <ul className="space-y-3 text-sm text-slate-600">
+      {(company.city || company.state) && (
+        <li className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-[#6d28d9] flex-shrink-0" />
+          {[company.city, company.state].filter(Boolean).join(', ')}
+        </li>
+      )}
+      {company.website && (
+        <li className="flex items-center gap-2">
+          <Globe className="h-4 w-4 text-[#6d28d9] flex-shrink-0" />
+          <a href={/^https?:\/\//.test(company.website!) ? company.website! : `https://${company.website}`} target="_blank" rel="noopener noreferrer" className="text-[#6d28d9] hover:text-[#7c3aed] hover:underline truncate font-bold text-sm">
+            {company.website!.replace(/^https?:\/\//, '')}
+          </a>
+        </li>
+      )}
+      {company.employee_count && (
+        <li className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-[#6d28d9] flex-shrink-0" />
+          {company.employee_count} employees
+        </li>
+      )}
+      {company.founded_year && (
+        <li className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-[#6d28d9] flex-shrink-0" />
+          Founded {company.founded_year}
+        </li>
+      )}
+    </ul>
+  )
 
   return (
     <>
@@ -290,10 +363,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               {companyTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {companyTags.map(tag => (
-                    <span
-                      key={tag.id}
-                      className="rounded-full bg-violet-50 border border-violet-200 text-violet-700 px-2.5 py-0.5 text-xs font-bold"
-                    >
+                    <span key={tag.id} className="rounded-full bg-violet-50 border border-violet-200 text-violet-700 px-2.5 py-0.5 text-xs font-bold">
                       #{tag.name}
                     </span>
                   ))}
@@ -309,59 +379,193 @@ export default async function CompanyPage({ params, searchParams }: Props) {
         </div>
       </section>
 
+      {/* Tab navigation */}
+      <div className="border-b border-slate-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex gap-0 overflow-x-auto scrollbar-none">
+            {[
+              { id: 'overview', label: 'Overview' },
+              { id: 'reviews', label: `Reviews${company.total_reviews > 0 ? ` (${company.total_reviews})` : ''}` },
+              { id: 'products', label: 'Products & Services' },
+              { id: 'about', label: 'About' },
+            ].map(t => (
+              <Link
+                key={t.id}
+                href={`/company/${slug}${t.id !== 'overview' ? `?tab=${t.id}` : ''}`}
+                className={`px-4 py-3.5 text-sm font-black border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                  activeTab === t.id
+                    ? 'border-[#6d28d9] text-[#6d28d9]'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                {t.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main column */}
+
+          {/* ── Main column ── */}
           <div className="lg:col-span-2 space-y-8">
-            {company.description && (
-              <p className="text-slate-600 leading-relaxed">{company.description}</p>
-            )}
 
-            <RatingBreakdown reviews={reviews} businessType={company.business_type} />
-
-            {/* Reviews */}
-            <div>
-              {own_company && (
-                <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm font-bold text-red-700">
-                  You cannot review your own company.
+            {activeTab === 'products' ? (
+              /* Products & Services tab */
+              <>
+                {activeProducts.length > 0 ? (
+                  <div>
+                    <h2 className="text-xl font-black text-slate-950 mb-5">Products & Services</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                      {activeProducts.map(ps => (
+                        <div key={ps.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-black text-slate-800">{ps.name}</span>
+                            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600 capitalize">{ps.type}</span>
+                          </div>
+                          {ps.description && <p className="text-sm text-slate-500 leading-relaxed">{ps.description}</p>}
+                          {ps.price_range && <p className="text-xs text-slate-400 mt-2 font-bold">{ps.price_range}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-white px-8 py-14 text-center">
+                    <p className="text-3xl mb-3">📦</p>
+                    <p className="text-slate-600 font-black">No products or services listed yet</p>
+                  </div>
+                )}
+                {featureGroups.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-black text-slate-950 mb-5">Features & Capabilities</h2>
+                    <div className="space-y-5">
+                      {featureGroups.map(group => (
+                        <div key={group.subcategory.slug}>
+                          <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">{group.subcategory.name}</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {group.features.map(f => (
+                              <Link key={f.id} href={`/categories/${group.subcategory.slug}?feature=${f.slug}`}
+                                className="rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1 text-xs font-bold text-violet-800 hover:bg-violet-100 transition-colors">
+                                {f.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : activeTab === 'about' ? (
+              /* About tab */
+              <div className="space-y-6">
+                {company.description && (
+                  <p className="text-slate-600 leading-relaxed text-base">{company.description}</p>
+                )}
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                  <h3 className="font-black text-slate-950">Company details</h3>
+                  {companyDetailsList}
                 </div>
-              )}
-              {already_reviewed && (
-                <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm font-bold text-amber-700">
-                  You've already submitted a review for this company.
-                </div>
-              )}
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-black text-slate-950">Reviews</h2>
-                <Link
-                  href={`/company/${slug}/write-review`}
-                  className="rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-5 py-2.5 text-sm transition-colors"
-                >
-                  Write a review
-                </Link>
+                {categories.length > 0 && (
+                  <div>
+                    <h3 className="font-black text-slate-950 mb-3">Listed in</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map(cat => (
+                        <Link key={cat.id} href={`/categories/${cat.slug}`}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 border border-violet-200 px-3 py-1.5 text-xs font-bold text-violet-800 hover:bg-violet-100 transition-colors">
+                          {cat.icon && <span>{cat.icon}</span>}
+                          {cat.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {featureGroups.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="font-black text-slate-950">Features & Capabilities</h3>
+                    {featureGroups.map(group => (
+                      <div key={group.subcategory.slug}>
+                        <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">{group.subcategory.name}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {group.features.map(f => (
+                            <Link key={f.id} href={`/categories/${group.subcategory.slug}?feature=${f.slug}`}
+                              className="rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1 text-xs font-bold text-violet-800 hover:bg-violet-100 transition-colors">
+                              {f.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+            ) : (
+              /* Overview + Reviews tabs */
+              <>
+                {company.description && (
+                  <p className="text-slate-600 leading-relaxed">{company.description}</p>
+                )}
 
-              {/* Review filters */}
-              {(() => {
-                const rp: Record<string, string> = {}
-                if (activeTag) rp.tag = activeTag
-                if (activeAssoc) rp.assoc = activeAssoc
-                if (reviewSort !== 'newest') rp.sort = reviewSort
+                {/* Sentiment summary — overview only */}
+                {activeTab === 'overview' && company.total_reviews > 0 && recommendPct !== null && (
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h3 className="font-black text-slate-950 mb-4">What reviewers say</h3>
+                    <div className="flex items-start gap-6 flex-wrap">
+                      <div className="text-center">
+                        <p className="text-3xl font-black text-[#6d28d9]">{recommendPct}%</p>
+                        <p className="text-xs text-slate-500 mt-0.5 whitespace-nowrap">would recommend</p>
+                      </div>
+                      {topSentimentTags.length > 0 && (
+                        <div>
+                          <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Top feedback</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {topSentimentTags.map(t => (
+                              <span key={t.name} className={`rounded-full px-2.5 py-1 text-xs font-bold border ${
+                                t.isPositive ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'
+                              }`}>
+                                #{t.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
-                function rfHref(override: Record<string, string | undefined>) {
-                  const p = new URLSearchParams(rp)
-                  Object.entries(override).forEach(([k, v]) => { if (v === undefined) p.delete(k); else p.set(k, v) })
-                  const qs = p.toString()
-                  return `/company/${slug}${qs ? '?' + qs : ''}`
-                }
+                <RatingBreakdown reviews={reviews} businessType={company.business_type} />
 
-                return (
+                {/* Reviews */}
+                <div>
+                  {own_company && (
+                    <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm font-bold text-red-700">
+                      You cannot review your own company.
+                    </div>
+                  )}
+                  {already_reviewed && (
+                    <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm font-bold text-amber-700">
+                      You&apos;ve already submitted a review for this company.
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-black text-slate-950">
+                      {activeTab === 'reviews' ? 'All Reviews' : 'Reviews'}
+                    </h2>
+                    <Link
+                      href={`/company/${slug}/write-review`}
+                      className="rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-5 py-2.5 text-sm transition-colors"
+                    >
+                      Write a review
+                    </Link>
+                  </div>
+
+                  {/* Review filters */}
                   <div className="space-y-2.5 mb-5">
-                    {/* Sort */}
                     <div className="flex flex-wrap gap-1.5 items-center">
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 w-14">Sort</span>
                       {([['newest', 'Newest'], ['oldest', 'Oldest'], ['highest', 'Highest rated'], ['lowest', 'Lowest rated']] as const).map(([v, label]) => (
-                        <Link key={v} href={rfHref({ sort: v === 'newest' ? undefined : v })}
+                        <Link key={v} href={buildReviewHref({ sort: v === 'newest' ? undefined : v })}
                           className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
                             reviewSort === v ? 'bg-[#6d28d9] border-[#6d28d9] text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
                           }`}>
@@ -369,18 +573,16 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                         </Link>
                       ))}
                     </div>
-
-                    {/* Association type */}
                     <div className="flex flex-wrap gap-1.5 items-center">
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 w-14">From</span>
-                      <Link href={rfHref({ assoc: undefined })}
+                      <Link href={buildReviewHref({ assoc: undefined })}
                         className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
                           !activeAssoc ? 'bg-[#6d28d9] border-[#6d28d9] text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
                         }`}>
                         All
                       </Link>
                       {Object.entries(ASSOC_LABELS).map(([v, label]) => (
-                        <Link key={v} href={rfHref({ assoc: activeAssoc === v ? undefined : v })}
+                        <Link key={v} href={buildReviewHref({ assoc: activeAssoc === v ? undefined : v })}
                           className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
                             activeAssoc === v ? 'bg-[#6d28d9] border-[#6d28d9] text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
                           }`}>
@@ -388,19 +590,17 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                         </Link>
                       ))}
                     </div>
-
-                    {/* Tag filter */}
                     {companyTags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 items-center">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 w-14">Tag</span>
-                        <Link href={rfHref({ tag: undefined })}
+                        <Link href={buildReviewHref({ tag: undefined })}
                           className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
                             !activeTag ? 'bg-[#6d28d9] border-[#6d28d9] text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
                           }`}>
                           All reviews
                         </Link>
                         {companyTags.map(tag => (
-                          <Link key={tag.id} href={rfHref({ tag: activeTag === tag.slug ? undefined : tag.slug })}
+                          <Link key={tag.id} href={buildReviewHref({ tag: activeTag === tag.slug ? undefined : tag.slug })}
                             className={`rounded-full px-3 py-1 text-xs font-black border transition-colors ${
                               activeTag === tag.slug ? 'bg-[#6d28d9] border-[#6d28d9] text-white' : 'bg-white border-slate-200 text-slate-600 hover:border-[#6d28d9] hover:text-[#6d28d9]'
                             }`}>
@@ -410,84 +610,100 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                       </div>
                     )}
                   </div>
-                )
-              })()}
 
-              {reviews.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-8 py-16 text-center">
-                  <p className="text-2xl mb-3">{activeTag ? '🏷️' : '✍️'}</p>
-                  <p className="text-lg font-black text-slate-950">
-                    {activeTag ? `No reviews tagged #${activeTag}` : 'No reviews yet'}
-                  </p>
-                  <p className="text-sm text-slate-500 mt-2">
-                    {activeTag
-                      ? <Link href={`/company/${slug}`} className="text-[#6d28d9] font-bold">View all reviews</Link>
-                      : <>Be the first to review {company.name}</>}
-                  </p>
-                  {!activeTag && (
-                    <Link
-                      href={`/company/${slug}/write-review`}
-                      className="inline-block mt-5 rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-6 py-2.5 text-sm transition-colors"
-                    >
-                      Write a review
-                    </Link>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <ReviewCard key={review.id} review={review} companySlug={slug} reviewTags={reviewTagsMap[review.id] ?? []} isOwner={isOwner} />
-                  ))}
-                  {!activeTag && company.total_reviews > 10 && (
-                    <div className="text-center pt-2">
-                      <Link
-                        href={`/company/${slug}/reviews`}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-2 text-sm font-black text-slate-700 hover:bg-slate-50 transition-colors"
-                      >
-                        View all {company.total_reviews} reviews <ArrowRight className="h-4 w-4" />
-                      </Link>
+                  {reviews.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-8 py-16 text-center">
+                      <p className="text-2xl mb-3">{activeTag ? '🏷️' : '✍️'}</p>
+                      <p className="text-lg font-black text-slate-950">
+                        {activeTag ? `No reviews tagged #${activeTag}` : 'No reviews yet'}
+                      </p>
+                      <p className="text-sm text-slate-500 mt-2">
+                        {activeTag
+                          ? <Link href={`/company/${slug}`} className="text-[#6d28d9] font-bold">View all reviews</Link>
+                          : <>Be the first to review {company.name}</>}
+                      </p>
+                      {!activeTag && (
+                        <Link href={`/company/${slug}/write-review`}
+                          className="inline-block mt-5 rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-6 py-2.5 text-sm transition-colors">
+                          Write a review
+                        </Link>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {reviews.map((review) => (
+                        <ReviewCard key={review.id} review={review} companySlug={slug} reviewTags={reviewTagsMap[review.id] ?? []} isOwner={isOwner} />
+                      ))}
+                      {/* Overview: "See all reviews" link */}
+                      {activeTab === 'overview' && company.total_reviews > 10 && (
+                        <div className="text-center pt-2">
+                          <Link href={`/company/${slug}?tab=reviews`}
+                            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-2 text-sm font-black text-slate-700 hover:bg-slate-50 transition-colors">
+                            See all {company.total_reviews} reviews <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </div>
+                      )}
+                      {/* Reviews tab: link to paginated page if more than 10 */}
+                      {activeTab === 'reviews' && !activeTag && company.total_reviews > 10 && (
+                        <div className="text-center pt-2">
+                          <Link href={`/company/${slug}/reviews`}
+                            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-2 text-sm font-black text-slate-700 hover:bg-slate-50 transition-colors">
+                            View all {company.total_reviews} reviews <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
 
-          {/* Sidebar */}
+          {/* ── Sidebar ── */}
           <div className="space-y-5">
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-              <h3 className="font-black text-slate-950">Company details</h3>
-              <ul className="space-y-3 text-sm text-slate-600">
-                {(company.city || company.state) && (
-                  <li className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-[#6d28d9] flex-shrink-0" />
-                    {[company.city, company.state].filter(Boolean).join(', ')}
-                  </li>
-                )}
-                {company.website && (
-                  <li className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-[#6d28d9] flex-shrink-0" />
-                    <a href={/^https?:\/\//.test(company.website!) ? company.website! : `https://${company.website}`} target="_blank" rel="noopener noreferrer" className="text-[#6d28d9] hover:text-[#7c3aed] hover:underline truncate font-bold text-sm">
-                      {company.website!.replace(/^https?:\/\//, '')}
-                    </a>
-                  </li>
-                )}
-                {company.employee_count && (
-                  <li className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-[#6d28d9] flex-shrink-0" />
-                    {company.employee_count} employees
-                  </li>
-                )}
-                {company.founded_year && (
-                  <li className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-[#6d28d9] flex-shrink-0" />
-                    Founded {company.founded_year}
-                  </li>
-                )}
-              </ul>
-            </div>
+            <Link
+              href={`/company/${slug}/write-review`}
+              className="block w-full rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-5 py-3 text-sm transition-colors text-center"
+            >
+              Write a review
+            </Link>
 
-            {featureGroups.length > 0 && (
+            {/* Company details — all tabs except About (shown in main on About) */}
+            {activeTab !== 'about' && (
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                <h3 className="font-black text-slate-950">Company details</h3>
+                {companyDetailsList}
+              </div>
+            )}
+
+            {/* Also consider — overview and reviews tabs */}
+            {(activeTab === 'overview' || activeTab === 'reviews') && competitors.length > 0 && (
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="font-black text-slate-950 mb-4">Also consider</h3>
+                <div className="space-y-3">
+                  {competitors.map(c => (
+                    <Link key={c.id} href={`/company/${c.slug}`} prefetch={false}
+                      className="flex items-center gap-3 hover:bg-slate-50 rounded-lg p-1.5 -mx-1.5 transition-colors group">
+                      <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {c.logo_url
+                          ? <img src={c.logo_url} alt={c.name} className="h-9 w-9 object-cover rounded-lg" />
+                          : <span className="rounded-md bg-[#6d28d9] h-6 w-6 flex items-center justify-center text-white text-xs font-black">{c.name[0]}</span>}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-black text-slate-950 text-xs truncate group-hover:text-[#6d28d9] transition-colors">{c.name}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <StarRating value={c.average_rating} size="sm" />
+                          <span className="text-xs text-slate-500">{c.average_rating.toFixed(1)} ({c.total_reviews})</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Features — overview and reviews tabs */}
+            {(activeTab === 'overview' || activeTab === 'reviews') && featureGroups.length > 0 && (
               <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                 <h3 className="font-black text-slate-950">Features & Capabilities</h3>
                 {featureGroups.map(group => (
@@ -495,11 +711,8 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                     <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">{group.subcategory.name}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {group.features.map(f => (
-                        <Link
-                          key={f.id}
-                          href={`/categories/${group.subcategory.slug}?feature=${f.slug}`}
-                          className="rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1 text-xs font-bold text-violet-800 hover:bg-violet-100 transition-colors"
-                        >
+                        <Link key={f.id} href={`/categories/${group.subcategory.slug}?feature=${f.slug}`}
+                          className="rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1 text-xs font-bold text-violet-800 hover:bg-violet-100 transition-colors">
                           {f.name}
                         </Link>
                       ))}
@@ -509,11 +722,17 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               </div>
             )}
 
-            {activeProducts.length > 0 && (
+            {/* Products — overview and reviews tabs */}
+            {(activeTab === 'overview' || activeTab === 'reviews') && activeProducts.length > 0 && (
               <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
-                <h3 className="font-black text-slate-950">Products & Services</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-black text-slate-950">Products & Services</h3>
+                  <Link href={`/company/${slug}?tab=products`} className="text-xs font-black text-[#6d28d9] hover:underline">
+                    See all
+                  </Link>
+                </div>
                 <ul className="space-y-3">
-                  {activeProducts.map((ps) => (
+                  {activeProducts.slice(0, 4).map(ps => (
                     <li key={ps.id} className="text-sm">
                       <div className="flex items-center justify-between">
                         <span className="font-black text-slate-800">{ps.name}</span>
@@ -526,13 +745,6 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                 </ul>
               </div>
             )}
-
-            <Link
-              href={`/company/${slug}/write-review`}
-              className="block w-full rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-5 py-3 text-sm transition-colors text-center"
-            >
-              Write a review
-            </Link>
           </div>
         </div>
       </div>

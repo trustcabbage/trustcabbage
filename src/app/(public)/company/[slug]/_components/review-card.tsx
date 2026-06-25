@@ -1,6 +1,7 @@
 ﻿import { ThumbsUp, CheckCircle, Building2 } from 'lucide-react'
 import { StarRating } from '@/components/reviews/star-rating'
 import { ReplyForm } from './reply-form'
+import { markHelpful } from '../_actions'
 
 const ASSOCIATION_LABELS: Record<string, string> = {
   current_client: 'Current client',
@@ -33,9 +34,10 @@ interface ReviewCardProps {
   companySlug: string
   reviewTags?: ReviewTag[]
   isOwner?: boolean
+  currentUserId?: string | null
 }
 
-export function ReviewCard({ review, reviewTags = [], isOwner = false }: ReviewCardProps) {
+export function ReviewCard({ review, companySlug, reviewTags = [], isOwner = false }: ReviewCardProps) {
   const author = review.is_anonymous ? 'Anonymous' : (review.users?.display_name ?? 'Reviewer')
   const date = new Date(review.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })
 
@@ -171,12 +173,19 @@ export function ReviewCard({ review, reviewTags = [], isOwner = false }: ReviewC
       )}
 
       {/* Helpful */}
-      {review.helpful_votes > 0 && (
-        <div className="flex items-center gap-1 text-xs text-slate-400">
-          <ThumbsUp className="h-3 w-3" />
-          {review.helpful_votes} found this helpful
-        </div>
-      )}
+      <div className="flex items-center gap-3 pt-1 border-t border-slate-100">
+        <form action={markHelpful}>
+          <input type="hidden" name="review_id" value={review.id} />
+          <input type="hidden" name="company_slug" value={companySlug} />
+          <button
+            type="submit"
+            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-[#6d28d9] transition-colors"
+          >
+            <ThumbsUp className="h-3 w-3" />
+            Helpful{review.helpful_votes > 0 ? ` (${review.helpful_votes})` : ''}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

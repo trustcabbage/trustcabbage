@@ -260,10 +260,13 @@ export function NewCompanyReviewForm({
       return
     }
 
-    await supabase.from('company_categories').insert({
-      company_id: newCompany.id,
-      category_id: company.category_id,
-    })
+    if (company.category_id) {
+      const { error: ccErr } = await supabase.from('company_categories').insert({
+        company_id: newCompany.id,
+        category_id: company.category_id,
+      })
+      if (ccErr) console.error('company_categories insert failed:', ccErr.message)
+    }
 
     let reviewRow: { id: string } | null = null
     let reviewError: any = null

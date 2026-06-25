@@ -30,8 +30,8 @@ export function Navbar({ user }: { user: NavUser | null }) {
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm font-bold">
-          <Link href="/categories" className="text-violet-200 hover:text-white transition-colors">
-            Browse
+          <Link href="/for-businesses" className="text-violet-200 hover:text-white transition-colors">
+            For Business
           </Link>
           <Link href="/search" className="text-violet-200 hover:text-white transition-colors">
             Search

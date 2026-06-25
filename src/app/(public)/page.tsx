@@ -14,7 +14,7 @@ type CategoryRow = { id: string; name: string; slug: string; icon: string | null
 type FeaturedCompany = {
   id: string; name: string; slug: string; logo_url: string | null
   average_rating: number; total_reviews: number; city: string | null; state: string | null
-  is_verified: boolean; is_featured: boolean
+  is_verified: boolean; is_featured: boolean; business_type: string | null
 }
 type RecentReview = {
   id: string; rating_overall: number; what_went_well: string
@@ -58,7 +58,7 @@ export default async function HomePage() {
     { count: categoryCount },
   ] = await Promise.all([
     supabase.from('categories').select('id, name, slug, icon, platform_type').eq('is_active', true).is('parent_id', null).order('sort_order').limit(30),
-    supabase.from('companies').select('id, name, slug, logo_url, average_rating, total_reviews, city, state, is_verified, is_featured').eq('is_featured', true).order('total_reviews', { ascending: false }).limit(8),
+    supabase.from('companies').select('id, name, slug, logo_url, average_rating, total_reviews, city, state, is_verified, is_featured, business_type').eq('is_featured', true).order('total_reviews', { ascending: false }).limit(8),
     supabase.from('reviews').select('id, rating_overall, what_went_well, created_at, is_anonymous, is_verified_buyer, companies(name, slug, city), users(display_name)').eq('status', 'published').order('created_at', { ascending: false }).limit(6),
     supabase.from('companies').select('*', { count: 'exact', head: true }),
     supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('status', 'published'),
@@ -69,6 +69,8 @@ export default async function HomePage() {
   const b2bCats = allCats.filter(c => c.platform_type === 'b2b' || c.platform_type === 'both').slice(0, 12)
   const b2cCats = allCats.filter(c => c.platform_type === 'b2c' || c.platform_type === 'both').slice(0, 12)
   const featured = (featuredRaw ?? []) as FeaturedCompany[]
+  const b2bFeatured = featured.filter(c => c.business_type === 'business_services' || c.business_type === 'both')
+  const b2cFeatured = featured.filter(c => c.business_type === 'online_b2c' || c.business_type === 'retail_chain' || c.business_type === 'both')
   const recentReviews = (recentRaw ?? []) as unknown as RecentReview[]
 
   const statsCompanies = formatCount(companyCount ?? 0, '4,200+')
@@ -104,7 +106,7 @@ export default async function HomePage() {
           </div>
           <p className="mt-4 text-xs text-slate-400">
             Are you a business?{' '}
-            <Link href="/for-businesses" className="text-[#6d28d9] hover:underline font-bold transition-colors">List or claim your company →</Link>
+            <Link href="/for-businesses/add" className="text-[#6d28d9] hover:underline font-bold transition-colors">List or claim your company →</Link>
           </p>
 
           {/* Trust signals inside hero */}
@@ -282,23 +284,23 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Featured companies ── */}
-      {featured.length > 0 && (
+      {/* ── Featured B2B companies ── */}
+      {b2bFeatured.length > 0 && (
         <section className="bg-white py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-end justify-between mb-2">
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-950">Top-rated companies this month</h2>
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-[#6d28d9] mb-1">Top B2B</p>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-950">Top B2B Service Companies</h2>
+              </div>
               <Link href="/search" className="text-sm font-black text-[#6d28d9] hover:text-[#7c3aed] transition-colors hidden sm:flex items-center gap-1">
                 See all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-            <p className="text-xs text-slate-400 mb-8">Featured listings — companies with the highest verified review scores in their category</p>
+            <p className="text-xs text-slate-400 mb-8">Featured B2B listings — highest verified review scores in their category</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {featured.map((company) => (
-                <Link
-                  key={company.id}
-                  href={`/company/${company.slug}`}
-                  prefetch={false}
+              {b2bFeatured.map((company) => (
+                <Link key={company.id} href={`/company/${company.slug}`} prefetch={false}
                   className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all flex gap-3 shadow-sm"
                 >
                   <div className="h-11 w-11 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -310,6 +312,53 @@ export default async function HomePage() {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-black text-slate-950 text-sm truncate">{company.name}</p>
                       {company.is_verified && <span className="rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-[#6d28d9] flex-shrink-0">✓</span>}
+                      {company.business_type === 'both' && <span className="rounded-full bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold text-purple-700 flex-shrink-0">✦ B2B + B2C</span>}
+                    </div>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <StarRating value={company.average_rating} size="sm" />
+                      <span className="text-xs text-slate-500">{(company.average_rating ?? 0).toFixed(1)} ({company.total_reviews ?? 0})</span>
+                    </div>
+                    {(company.city || company.state) && (
+                      <p className="text-xs text-slate-400 mt-0.5">{[company.city, company.state].filter(Boolean).join(', ')}</p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Featured B2C companies ── */}
+      {b2cFeatured.length > 0 && (
+        <section className="bg-slate-50 py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex items-end justify-between mb-2">
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-rose-500 mb-1">Top Online & Retail</p>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-950">Top Online Brands & Stores</h2>
+              </div>
+              <Link href="/search" className="text-sm font-black text-rose-500 hover:text-rose-600 transition-colors hidden sm:flex items-center gap-1">
+                See all <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <p className="text-xs text-slate-400 mb-8">Featured B2C listings — highest verified review scores from real customers</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {b2cFeatured.map((company) => (
+                <Link key={company.id} href={`/company/${company.slug}`} prefetch={false}
+                  className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all flex gap-3 shadow-sm"
+                >
+                  <div className="h-11 w-11 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {company.logo_url
+                      ? <img src={company.logo_url} alt={company.name} className="h-11 w-11 rounded-xl object-cover" />
+                      : <span className="rounded-lg bg-rose-500 h-7 w-7 flex items-center justify-center text-white text-xs font-black">{company.name[0]}</span>}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-black text-slate-950 text-sm truncate">{company.name}</p>
+                      {company.is_verified && <span className="rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-[#6d28d9] flex-shrink-0">✓</span>}
+                      {company.business_type === 'retail_chain' && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 flex-shrink-0">🏪 Has stores</span>}
+                      {company.business_type === 'both' && <span className="rounded-full bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold text-purple-700 flex-shrink-0">✦ B2B + B2C</span>}
                     </div>
                     <div className="flex items-center gap-1 mt-0.5">
                       <StarRating value={company.average_rating} size="sm" />

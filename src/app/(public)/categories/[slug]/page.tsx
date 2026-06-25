@@ -18,7 +18,7 @@ type SidebarRow = { id: string; name: string; slug: string; icon: string | null 
 type CompanyRow = {
   id: string; name: string; slug: string; logo_url: string | null; description: string | null
   average_rating: number | null; total_reviews: number | null; city: string | null; state: string | null
-  is_verified: boolean; founded_year: number | null
+  is_verified: boolean; founded_year: number | null; business_type: string | null
   business_model_id: string | null; business_models: { name: string; slug: string } | null
   products_services: Array<{ name: string; type: string; sort_order: number | null }> | null
 }
@@ -110,7 +110,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     if (companyIds.length > 0) {
       let q = supabase
         .from('companies')
-        .select('id, name, slug, logo_url, description, average_rating, total_reviews, city, state, is_verified, founded_year, business_model_id, business_models(name, slug), products_services(name, type, sort_order)')
+        .select('id, name, slug, logo_url, description, average_rating, total_reviews, city, state, is_verified, founded_year, business_type, business_model_id, business_models(name, slug), products_services(name, type, sort_order)')
         .in('id', companyIds)
 
       if (stateFilter) q = q.eq('state', stateFilter)
@@ -468,9 +468,12 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                           <p className="font-black text-slate-950 group-hover:text-[#6d28d9] transition-colors text-sm truncate">{company.name}</p>
                           {company.is_verified && <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-black text-violet-700 flex-shrink-0">Verified</span>}
                           {company.business_models && <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-black text-purple-700 flex-shrink-0">{company.business_models.name}</span>}
+                          {company.business_type === 'retail_chain' && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700 flex-shrink-0">🏪 Has stores</span>}
+                          {company.business_type === 'both' && <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-black text-purple-700 flex-shrink-0">✦ B2B + B2C</span>}
+                          {company.business_type === 'online_b2c' && <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-black text-rose-600 flex-shrink-0">Online Brand</span>}
                         </div>
                         {subcatPills.length > 0 && (
-                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                          <div className="flex items-center gap-1 mt-2 flex-wrap">
                             {subcatPills.map(sub => (
                               <span key={sub.id} className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-black text-violet-700 flex-shrink-0">
                                 {sub.name}
@@ -479,7 +482,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                           </div>
                         )}
 
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
                           {(company.city || company.state) && (
                             <p className="text-xs text-slate-400">{[company.city, company.state].filter(Boolean).join(', ')}</p>
                           )}
@@ -489,24 +492,24 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                         </div>
 
                         {services.length > 0 && (
-                          <p className="text-xs text-[#6d28d9] font-bold mt-1.5 truncate">
+                          <p className="text-xs text-[#6d28d9] font-bold mt-2 truncate">
                             {services.map(s => s.name).join(' · ')}
                           </p>
                         )}
 
                         {company.description && (
-                          <p className="text-xs text-slate-500 mt-1 leading-5 line-clamp-2">{company.description}</p>
+                          <p className="text-xs text-slate-500 mt-2 leading-5 line-clamp-2">{company.description}</p>
                         )}
 
                         {!company.description && excerpt && (
-                          <p className="text-xs text-slate-500 mt-1 leading-5 line-clamp-2 italic">&ldquo;{excerpt}&rdquo;</p>
+                          <p className="text-xs text-slate-500 mt-2 leading-5 line-clamp-2 italic">&ldquo;{excerpt}&rdquo;</p>
                         )}
 
                         {company.description && excerpt && (
-                          <p className="text-xs text-slate-400 mt-1 leading-5 line-clamp-1 italic">&ldquo;{excerpt}&rdquo;</p>
+                          <p className="text-xs text-slate-400 mt-2 leading-5 line-clamp-1 italic">&ldquo;{excerpt}&rdquo;</p>
                         )}
 
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-2 mt-3">
                           <StarRating value={company.average_rating ?? 0} size="sm" />
                           <span className="text-sm font-black text-slate-800">{(company.average_rating ?? 0).toFixed(1)}</span>
                           <span className="text-xs text-slate-400">({company.total_reviews ?? 0})</span>
