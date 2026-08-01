@@ -749,6 +749,12 @@ export default function ProductReviewsPage() {
               </span>
             ))}
           </div>
+          <p className="mt-6 text-xs text-violet-200/50">
+            Already sold?{' '}
+            <Link href="/for-businesses/integrations#product-api" className="text-violet-200 font-bold hover:underline">
+              Read the full API reference →
+            </Link>
+          </p>
         </div>
       </section>
 

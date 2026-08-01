@@ -2,13 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
   Code2, QrCode, Link2, Mail, CheckCircle, ArrowRight,
-  MousePointerClick, Printer, Wrench, ListChecks,
+  MousePointerClick, Printer, Wrench, ListChecks, Terminal, Package, MessageCircleQuestion,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Widget & QR Integration Guide | Trust Cabbage',
+  title: 'Integration & API Guide | Trust Cabbage',
   description:
-    'Step-by-step guide to installing the Trust Cabbage review widget on your website, downloading your QR code, and using invite links. Live rating badge, popup review form, one line of code.',
+    'Step-by-step guide to installing the Trust Cabbage review widget, QR code, invite link, the Product Reviews API, and the company-level review invite API. Live rating badges, popup review forms, per-product reviews, one line of code.',
 }
 
 const NAV = [
@@ -16,6 +16,8 @@ const NAV = [
   { id: 'qrcode', label: 'QR code', icon: QrCode },
   { id: 'invite-link', label: 'Invite link', icon: Link2 },
   { id: 'email-invites', label: 'Email invites', icon: Mail },
+  { id: 'product-api', label: 'Product Reviews API', icon: Package },
+  { id: 'company-api', label: 'Company API', icon: Terminal },
   { id: 'which-tool', label: 'Which tool?', icon: ListChecks },
 ]
 
@@ -70,7 +72,9 @@ const WHICH_TOOL = [
   { situation: 'You send invoices or proposals', tool: 'QR code in the footer' },
   { situation: 'You have a physical location', tool: 'QR code at reception + on printed material' },
   { situation: 'You talk to clients on WhatsApp', tool: 'Invite link via WhatsApp share' },
-  { situation: 'You have a client email list', tool: 'Email invites' },
+  { situation: 'You have a client email list, no developer needed', tool: 'Email invites (manual form in dashboard)' },
+  { situation: 'You sell distinct products and want per-product reviews', tool: 'Product Reviews API + widget' },
+  { situation: 'You want invites triggered automatically from your backend', tool: 'Company-level API or Product Reviews API' },
   { situation: 'All of the above', tool: 'Use all of them. Each tags its source, so analytics shows what works.' },
 ]
 
@@ -143,11 +147,12 @@ export default function IntegrationsPage() {
             <span className="text-slate-300">Integration guide</span>
           </nav>
           <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-3">
-            Widget & QR integration guide
+            Integration & API guide
           </h1>
           <p className="text-violet-200/60 text-sm sm:text-base max-w-2xl leading-relaxed">
-            Everything you need to start collecting reviews with the website widget, QR code,
-            invite link, and email invites. All four tools are live and free during early access.
+            Everything you need to start collecting reviews: the website widget, QR code, invite
+            link, email invites, and for developers, the Product Reviews API and company-level
+            review API. Everything below is live and free during early access.
           </p>
 
           {/* Section nav */}
@@ -351,7 +356,159 @@ export default function IntegrationsPage() {
           </p>
         </SectionCard>
 
-        {/* ── 5. Which tool ── */}
+        {/* ── 5. Product Reviews API ── */}
+        <SectionCard id="product-api" icon={Package} title="Product Reviews API" badge="Early access · Free">
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Collect and display reviews for individual products you sell, separate from your
+            company&apos;s overall rating badge above. Your backend registers products and triggers
+            review invites; an optional embeddable widget collects and displays reviews directly
+            on your own order and product pages.
+          </p>
+
+          <div>
+            <SubHeading>How it fits together</SubHeading>
+            <ol className="space-y-3">
+              {[
+                {
+                  n: '1',
+                  text: (
+                    <>Generate an API key from <Link href="/dashboard/api" className="text-[#6d28d9] font-bold hover:underline">dashboard → Product Reviews API</Link> (requires a claimed company page). Keep it on your server, never in browser or app code.</>
+                  ),
+                },
+                {
+                  n: '2',
+                  text: 'Register each product, once, by calling the invite endpoint for a real customer. There is no separate "create product" call, the first call for a given product_id both registers it and (optionally) sends the invite.',
+                },
+                {
+                  n: '3',
+                  text: 'From then on: keep calling the API for future customers, and/or embed the widget on your order/product pages, and/or send your own email linking to the product, all reference the same product_id.',
+                },
+              ].map(s => (
+                <li key={s.n} className="flex items-start gap-3">
+                  <div className="h-6 w-6 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0 font-black text-[#6d28d9] text-xs">{s.n}</div>
+                  <p className="text-sm text-slate-600 leading-relaxed pt-0.5">{s.text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div>
+            <SubHeading>Send a review invite</SubHeading>
+            <p className="text-xs text-slate-500 mb-3">
+              <code className="font-mono bg-slate-100 rounded px-1.5 py-0.5">customer_email</code> is
+              optional. Include it and Trust Cabbage sends the invite. Omit it to only register the
+              product, no customer data is shared with us at all, useful if you plan to send your
+              own email instead.
+            </p>
+            <div className="rounded-xl bg-slate-950 px-5 py-4 font-mono text-xs leading-relaxed overflow-x-auto">
+              <p><span className="text-amber-300">POST</span> <span className="text-emerald-300">https://trustcabbage.com/api/review-invite</span></p>
+              <p className="text-slate-500 mt-2">{'// Headers'}</p>
+              <p><span className="text-violet-300">Authorization:</span> <span className="text-slate-300">Bearer tc_live_your_key</span></p>
+              <p><span className="text-violet-300">Content-Type:</span> <span className="text-slate-300">application/json</span></p>
+              <p className="text-slate-500 mt-2">{'// Body — with email, we send the invite'}</p>
+              <p className="text-slate-300">{'{'}</p>
+              <p className="pl-3"><span className="text-sky-300">&quot;customer_email&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;priya@example.com&quot;</span><span className="text-slate-400">,</span></p>
+              <p className="pl-3"><span className="text-sky-300">&quot;product_id&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;SKU-1042&quot;</span><span className="text-slate-400">,</span></p>
+              <p className="pl-3"><span className="text-sky-300">&quot;product_name&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;Vitamin C Face Serum&quot;</span><span className="text-slate-400">,</span></p>
+              <p className="pl-3"><span className="text-sky-300">&quot;order_id&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;ORD-9234&quot;</span></p>
+              <p className="text-slate-300">{'}'}</p>
+            </div>
+            <p className="text-xs text-slate-400 mt-2">
+              Response: <code className="font-mono bg-slate-100 rounded px-1 py-0.5">{'{ "status": "sent" }'}</code>.
+              Omit <code className="font-mono bg-slate-100 rounded px-1 py-0.5">customer_email</code> for
+              registration-only, response becomes{' '}
+              <code className="font-mono bg-slate-100 rounded px-1 py-0.5">{'{ "status": "registered", "write_review_url": "…" }'}</code>{' '}
+              which you can use in your own email.
+            </p>
+          </div>
+
+          <div>
+            <DocTable
+              headers={['Field', 'Notes']}
+              rows={[
+                ['product_id', 'Your own SKU or product ID, any string. Registers the product on first use.'],
+                ['customer_email', 'Optional. Include to have Trust Cabbage send the invite, omit for registration-only.'],
+                ['product_name', 'Used as the display name when the product is first registered.'],
+                ['order_id', 'Recommended with an email, deduplicates so the same order + email is never invited twice.'],
+              ]}
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Code2 className="h-4 w-4 text-slate-400" />
+              <SubHeading>Product widget, no API key needed</SubHeading>
+            </div>
+            <p className="text-sm text-slate-600 leading-relaxed mb-3">
+              Collect and display reviews directly on your site instead of email. Doesn&apos;t use
+              your API key (nothing secret in page source), scoped to your company by URL like the
+              rating badge widget above.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-slate-400 mb-1.5">Collect, on your order confirmation page</p>
+                <div className="rounded-xl bg-slate-950 px-5 py-4 font-mono text-xs leading-relaxed overflow-x-auto">
+                  <p><span className="text-sky-300">{'<script'}</span></p>
+                  <p className="pl-3"><span className="text-violet-300">src</span><span className="text-slate-400">=</span><span className="text-emerald-300">&quot;https://trustcabbage.com/api/widget/product/your-company-slug.js&quot;</span></p>
+                  <p className="pl-3"><span className="text-violet-300">data-product-id</span><span className="text-slate-400">=</span><span className="text-emerald-300">&quot;SKU-1042&quot;</span></p>
+                  <p className="pl-3"><span className="text-violet-300">data-mode</span><span className="text-slate-400">=</span><span className="text-emerald-300">&quot;collect&quot;</span></p>
+                  <p><span className="text-sky-300">{'></script>'}</span></p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide text-slate-400 mb-1.5">Display, on your product page</p>
+                <div className="rounded-xl bg-slate-950 px-5 py-4 font-mono text-xs leading-relaxed overflow-x-auto">
+                  <p><span className="text-sky-300">{'<script'}</span></p>
+                  <p className="pl-3"><span className="text-violet-300">src</span><span className="text-slate-400">=</span><span className="text-emerald-300">&quot;https://trustcabbage.com/api/widget/product/your-company-slug.js&quot;</span></p>
+                  <p className="pl-3"><span className="text-violet-300">data-product-id</span><span className="text-slate-400">=</span><span className="text-emerald-300">&quot;SKU-1042&quot;</span></p>
+                  <p className="pl-3"><span className="text-violet-300">data-mode</span><span className="text-slate-400">=</span><span className="text-emerald-300">&quot;display&quot;</span></p>
+                  <p><span className="text-sky-300">{'></script>'}</span></p>
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-slate-400 mt-2">
+              Same <code className="font-mono bg-slate-100 rounded px-1 py-0.5">data-product-id</code> in
+              both snippets links collect and display together. Requires the product to already be
+              registered (step 2 above) — the widget itself never sends any customer data.
+            </p>
+          </div>
+
+          <div className="rounded-xl bg-violet-50 border border-violet-200 px-4 py-3.5 flex items-start gap-3">
+            <MessageCircleQuestion className="h-4 w-4 text-[#6d28d9] flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-slate-600 leading-relaxed">
+              <span className="font-black text-slate-900">Product Q&amp;A</span> is included automatically:
+              visitors can ask questions on your product page, you (and verified buyers) can answer.
+              Official company answers get a verified badge and show first. Answers currently must
+              be written on your Trust Cabbage product page.
+            </p>
+          </div>
+        </SectionCard>
+
+        {/* ── 6. Company-level API ── */}
+        <SectionCard id="company-api" icon={Terminal} title="Company-level review API" badge="Early access · Free">
+          <p className="text-sm text-slate-600 leading-relaxed">
+            The API equivalent of the <a href="#email-invites" className="text-[#6d28d9] font-bold hover:underline">Email invites</a> tool
+            above, for triggering a company-level review invite (not tied to a specific product)
+            from your own backend, for example right when a project wraps up or a contract ends.
+          </p>
+          <div className="rounded-xl bg-slate-950 px-5 py-4 font-mono text-xs leading-relaxed overflow-x-auto">
+            <p><span className="text-amber-300">POST</span> <span className="text-emerald-300">https://trustcabbage.com/api/company-invite</span></p>
+            <p className="text-slate-500 mt-2">{'// Headers'}</p>
+            <p><span className="text-violet-300">Authorization:</span> <span className="text-slate-300">Bearer tc_live_your_key</span></p>
+            <p><span className="text-violet-300">Content-Type:</span> <span className="text-slate-300">application/json</span></p>
+            <p className="text-slate-500 mt-2">{'// Body'}</p>
+            <p className="text-slate-300">{'{'}</p>
+            <p className="pl-3"><span className="text-sky-300">&quot;customer_email&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;priya@example.com&quot;</span></p>
+            <p className="text-slate-300">{'}'}</p>
+          </div>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Same API key as the Product Reviews API above, works for both. Shares the exact same
+            monthly limit as the manual Email invites form (see above) — using the API doesn&apos;t
+            grant extra sends beyond your plan.
+          </p>
+        </SectionCard>
+
+        {/* ── 7. Which tool ── */}
         <SectionCard id="which-tool" icon={ListChecks} title="Which tool should I use?">
           <DocTable headers={['Your situation', 'Best tool']} rows={WHICH_TOOL.map(w => [w.situation, w.tool])} />
         </SectionCard>
