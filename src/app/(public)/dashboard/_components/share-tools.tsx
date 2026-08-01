@@ -9,7 +9,7 @@ export function ShareTools({ slug, companyName, inviteToken }: { slug: string; c
   const inviteUrlBase = `${siteUrl}/review/${slug}?ref=${inviteToken}`
   const linkUrl = `${inviteUrlBase}&src=link`
   const waUrl = `https://wa.me/?text=${encodeURIComponent(
-    `Hi! We'd love to hear your feedback about ${companyName}. It only takes 3 minutes — please leave us a review here:\n${inviteUrlBase}&src=whatsapp`
+    `Hi! We'd love to hear your feedback about ${companyName}. It only takes 3 minutes, please leave us a review here:\n${inviteUrlBase}&src=whatsapp`
   )}`
 
   async function copyLink() {
@@ -22,7 +22,7 @@ export function ShareTools({ slug, companyName, inviteToken }: { slug: string; c
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
       <div className="px-5 py-4 border-b border-slate-100">
         <h2 className="font-black text-slate-950 text-sm">Your review link</h2>
-        <p className="text-xs text-slate-400 mt-0.5">Share this with clients — reviews from this link are tracked</p>
+        <p className="text-xs text-slate-400 mt-0.5">Share this with clients, reviews from this link are tracked</p>
       </div>
 
       <div className="px-5 py-4 space-y-3">

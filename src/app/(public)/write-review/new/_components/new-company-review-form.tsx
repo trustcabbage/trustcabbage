@@ -556,7 +556,7 @@ export function NewCompanyReviewForm({
             {step === 3 && (
               <div className="space-y-5">
                 <h2 className="text-lg font-black text-slate-950">What did you buy from {company.name}?</h2>
-                <p className="text-sm text-slate-500">Tag the product or service you bought — this helps others find it.</p>
+                <p className="text-sm text-slate-500">Tag the product or service you bought, this helps others find it.</p>
                 <TagInput
                   value={serviceTags}
                   onChange={setServiceTags}
@@ -617,14 +617,14 @@ export function NewCompanyReviewForm({
                     What did you love about it? <span className="text-red-400">*</span>
                   </Label>
                   <Textarea
-                    placeholder="Tell others what you loved — product quality, packaging, delivery speed…"
+                    placeholder="Tell others what you loved, product quality, packaging, delivery speed…"
                     value={b2cWritten.what_went_well}
                     onChange={e => setB2cWritten(prev => ({ ...prev, what_went_well: e.target.value }))}
                     rows={4}
                     className="border-slate-200 text-sm"
                   />
                   {b2cWritten.what_went_well.length > 0 && b2cWritten.what_went_well.trim().length < 20 ? (
-                    <p className="text-xs text-red-500 font-bold">{b2cWritten.what_went_well.trim().length} / 20 chars minimum — keep going</p>
+                    <p className="text-xs text-red-500 font-bold">{b2cWritten.what_went_well.trim().length} / 20 chars minimum, keep going</p>
                   ) : b2cWritten.what_went_well.trim().length >= 20 ? (
                     <p className="text-xs text-green-600 font-bold">✓ {b2cWritten.what_went_well.trim().length} chars</p>
                   ) : null}
@@ -632,7 +632,7 @@ export function NewCompanyReviewForm({
                 <div className="space-y-1.5">
                   <Label className="text-xs font-black uppercase tracking-wide text-slate-400">What could be better?</Label>
                   <Textarea
-                    placeholder="Any areas to improve — sizing, packaging, delivery delays…"
+                    placeholder="Any areas to improve, sizing, packaging, delivery delays…"
                     value={b2cWritten.what_to_improve}
                     onChange={e => setB2cWritten(prev => ({ ...prev, what_to_improve: e.target.value }))}
                     rows={3}
@@ -680,7 +680,7 @@ export function NewCompanyReviewForm({
               <div className="space-y-6">
                 <div className="space-y-4">
                   <h2 className="text-lg font-black text-slate-950">Add a photo <span className="text-slate-400 font-normal text-base">(optional)</span></h2>
-                  <p className="text-sm text-slate-500">Share a photo of your purchase — it helps others see what they are buying.</p>
+                  <p className="text-sm text-slate-500">Share a photo of your purchase, it helps others see what they are buying.</p>
                   {photoFile ? (
                     <div className="flex items-center gap-3 rounded-xl border border-[#6d28d9] bg-violet-50 p-4">
                       <div className="flex-1 min-w-0">
@@ -693,7 +693,7 @@ export function NewCompanyReviewForm({
                     <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 p-10 cursor-pointer hover:border-[#6d28d9] hover:bg-violet-50 transition-colors">
                       <Upload className="h-6 w-6 text-slate-400" />
                       <span className="text-sm font-bold text-slate-600">Click to upload product photo</span>
-                      <span className="text-xs text-slate-400">JPG or PNG — max 10 MB</span>
+                      <span className="text-xs text-slate-400">JPG or PNG, max 10 MB</span>
                       <input type="file" accept=".jpg,.jpeg,.png" onChange={e => { const f = e.target.files?.[0]; if (f && f.size > 10 * 1024 * 1024) { toast.error('File must be under 10 MB'); return } if (f) setPhotoFile(f) }} className="sr-only" />
                     </label>
                   )}
@@ -713,7 +713,7 @@ export function NewCompanyReviewForm({
                     <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 p-10 cursor-pointer hover:border-[#6d28d9] hover:bg-violet-50 transition-colors">
                       <Upload className="h-6 w-6 text-slate-400" />
                       <span className="text-sm font-bold text-slate-600">Click to upload order confirmation</span>
-                      <span className="text-xs text-slate-400">PDF, JPG, PNG — max 10 MB</span>
+                      <span className="text-xs text-slate-400">PDF, JPG, PNG, max 10 MB</span>
                       <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => { const f = e.target.files?.[0]; if (f && f.size > 10 * 1024 * 1024) { toast.error('File must be under 10 MB'); return } if (f) setProofFile(f) }} className="sr-only" />
                     </label>
                   )}
@@ -957,7 +957,7 @@ export function NewCompanyReviewForm({
                   <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 p-10 cursor-pointer hover:border-[#6d28d9] hover:bg-violet-50 transition-colors">
                     <Upload className="h-6 w-6 text-slate-400" />
                     <span className="text-sm font-bold text-slate-600">Click to upload proof</span>
-                    <span className="text-xs text-slate-400">PDF, JPG, PNG — max 10 MB</span>
+                    <span className="text-xs text-slate-400">PDF, JPG, PNG, max 10 MB</span>
                     <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => { const f = e.target.files?.[0]; if (f && f.size > 10 * 1024 * 1024) { toast.error('File must be under 10 MB'); return } if (f) setProofFile(f) }} className="sr-only" />
                   </label>
                 )}

@@ -18,7 +18,7 @@ type SidebarRow = { id: string; name: string; slug: string; icon: string | null 
 type CompanyRow = {
   id: string; name: string; slug: string; logo_url: string | null; description: string | null
   average_rating: number | null; total_reviews: number | null; city: string | null; state: string | null
-  is_verified: boolean; founded_year: number | null; business_type: string | null
+  is_verified: boolean; is_featured: boolean; founded_year: number | null; business_type: string | null
   business_model_id: string | null; business_models: { name: string; slug: string } | null
   products_services: Array<{ name: string; type: string; sort_order: number | null }> | null
 }
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cat = data as unknown as CategoryRow | null
   if (!cat) return {}
   return {
-    title: `${cat.name} Companies — Trust Cabbage`,
+    title: `${cat.name} Companies | Trust Cabbage`,
     description: cat.description ?? `Browse top ${cat.name} companies on Trust Cabbage. Read verified reviews from real businesses.`,
   }
 }
@@ -110,13 +110,14 @@ export default async function CategoryPage({ params, searchParams }: Props) {
     if (companyIds.length > 0) {
       let q = supabase
         .from('companies')
-        .select('id, name, slug, logo_url, description, average_rating, total_reviews, city, state, is_verified, founded_year, business_type, business_model_id, business_models(name, slug), products_services(name, type, sort_order)')
+        .select('id, name, slug, logo_url, description, average_rating, total_reviews, city, state, is_verified, is_featured, founded_year, business_type, business_model_id, business_models(name, slug), products_services(name, type, sort_order)')
         .in('id', companyIds)
 
       if (stateFilter) q = q.eq('state', stateFilter)
       if (modelSlug) q = (q as any).eq('business_models.slug', modelSlug)
       if (verified === '1') q = q.eq('is_verified', true)
       if (minRating > 0) q = q.gte('average_rating', minRating)
+      q = q.order('is_featured', { ascending: false })
       if (sort === 'reviews') q = q.order('total_reviews', { ascending: false })
       else if (sort === 'newest') q = q.order('created_at', { ascending: false })
       else q = q.order('average_rating', { ascending: false })
@@ -158,7 +159,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   companies.forEach(c => { if (c.business_models) modelSet.set(c.business_models.slug, c.business_models.name) })
   const availableModels = Array.from(modelSet.entries()).map(([slug, name]) => ({ slug, name }))
 
-  // Subcategory pill data — only relevant on parent category pages
+  // Subcategory pill data, only relevant on parent category pages
   const subcategoryById: Record<string, SidebarRow> = !category.parent_id
     ? Object.fromEntries(sidebar.map(s => [s.id, s]))
     : {}
@@ -378,7 +379,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               </div>
             )}
 
-            {/* Feature filter — subcategory pages only */}
+            {/* Feature filter, subcategory pages only */}
             {pageFeatures.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-slate-200">
                 <span className="text-xs font-black uppercase tracking-wide text-slate-400 self-center">Features</span>
@@ -420,7 +421,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               <div className="flex items-start gap-2 rounded-xl bg-violet-50 border border-violet-100 px-4 py-3 mb-4 text-xs text-slate-600">
                 <span className="flex-shrink-0 mt-px">ℹ️</span>
                 <span>
-                  Showing all companies in <strong>{category.name}</strong>. Each card shows the section it belongs to — use the sidebar to narrow down by section.
+                  Showing all companies in <strong>{category.name}</strong>. Each card shows the section it belongs to, use the sidebar to narrow down by section.
                 </span>
               </div>
             )}
@@ -466,6 +467,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-black text-slate-950 group-hover:text-[#6d28d9] transition-colors text-sm truncate">{company.name}</p>
+                          {company.is_featured && <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-black text-amber-700 flex-shrink-0">⭐ Featured</span>}
                           {company.is_verified && <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-black text-violet-700 flex-shrink-0">Verified</span>}
                           {company.business_models && <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-black text-purple-700 flex-shrink-0">{company.business_models.name}</span>}
                           {company.business_type === 'retail_chain' && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700 flex-shrink-0">🏪 Has stores</span>}
@@ -529,7 +531,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                 </h2>
                 <p className="text-sm text-slate-500 leading-relaxed max-w-3xl">
                   Trust Cabbage lists {companyCount} {category.name.toLowerCase()} {companyCount === 1 ? 'company' : 'companies'} with verified reviews from real Indian businesses.
-                  Each review covers staff quality, communication, billing transparency, delivery, and after-sales support — giving you a complete picture before you engage a vendor.
+                  Each review covers staff quality, communication, billing transparency, delivery, and after-sales support, giving you a complete picture before you engage a vendor.
                   All reviews are from verified buyers.{' '}
                   <Link href="/write-review" className="text-[#6d28d9] font-bold hover:underline">
                     Write a review →

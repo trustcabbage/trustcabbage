@@ -28,7 +28,7 @@ type Company = {
   average_rating: number; total_reviews: number
   is_verified: boolean; is_featured: boolean; business_type: string
   company_categories: Array<{ categories: { id: string; name: string; slug: string; icon: string | null; description: string | null } | null }>
-  products_services: Array<{ id: string; name: string; type: string; description: string | null; price_range: string | null; is_active: boolean }>
+  products_services: Array<{ id: string; name: string; slug: string | null; type: string; description: string | null; price_range: string | null; is_active: boolean; rating_avg: number; review_count: number }>
   business_models: { id: string; name: string; slug: string } | null
 }
 
@@ -84,7 +84,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
       employee_count, city, state, status, average_rating, total_reviews,
       is_verified, is_featured, business_type,
       company_categories(categories(id, name, slug, icon, description)),
-      products_services(id, name, type, description, price_range, is_active),
+      products_services(id, name, slug, type, description, price_range, is_active, rating_avg, review_count),
       business_models(id, name, slug)
     `)
     .eq('slug', slug)
@@ -104,7 +104,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     what_went_well, what_to_improve, would_recommend, recommend_reason,
     association_type, reviewer_role, engagement_phase, association_duration,
     is_anonymous, is_verified_buyer, helpful_votes, created_at,
-    users(display_name, avatar_url),
+    users(id, display_name, avatar_url),
     products_services(name),
     review_product_services(products_services(id, name))
   `
@@ -173,7 +173,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     .select('tags(id, name, slug)')
     .eq('company_id', company.id)
 
-  // Features: graceful — won't 404 if table missing
+  // Features: graceful, won't 404 if table missing
   const { data: rawCompanyFeatures } = await supabase
     .from('company_features')
     .select('features(id, name, slug, subcategory_id, categories:subcategory_id(name, slug))')
@@ -418,16 +418,32 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                   <div>
                     <h2 className="text-xl font-black text-slate-950 mb-5">Products & Services</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-                      {activeProducts.map(ps => (
-                        <div key={ps.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-black text-slate-800">{ps.name}</span>
-                            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600 capitalize">{ps.type}</span>
+                      {activeProducts.map(ps => {
+                        const card = (
+                          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm h-full">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-black text-slate-800">{ps.name}</span>
+                              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600 capitalize">{ps.type}</span>
+                            </div>
+                            {ps.description && <p className="text-sm text-slate-500 leading-relaxed">{ps.description}</p>}
+                            {ps.price_range && <p className="text-xs text-slate-400 mt-2 font-bold">{ps.price_range}</p>}
+                            {ps.review_count > 0 && (
+                              <div className="flex items-center gap-1.5 mt-3">
+                                <StarRating value={ps.rating_avg} size="sm" />
+                                <span className="text-xs font-black text-slate-700">{ps.rating_avg.toFixed(1)}</span>
+                                <span className="text-xs text-slate-400">({ps.review_count} review{ps.review_count !== 1 ? 's' : ''})</span>
+                              </div>
+                            )}
                           </div>
-                          {ps.description && <p className="text-sm text-slate-500 leading-relaxed">{ps.description}</p>}
-                          {ps.price_range && <p className="text-xs text-slate-400 mt-2 font-bold">{ps.price_range}</p>}
-                        </div>
-                      ))}
+                        )
+                        return ps.slug ? (
+                          <Link key={ps.id} href={`/company/${slug}/product/${ps.slug}`} className="hover:shadow-md hover:-translate-y-0.5 transition-all rounded-xl">
+                            {card}
+                          </Link>
+                        ) : (
+                          <div key={ps.id}>{card}</div>
+                        )
+                      })}
                     </div>
                   </div>
                 ) : (
@@ -507,7 +523,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                   <p className="text-slate-600 leading-relaxed">{company.description}</p>
                 )}
 
-                {/* Sentiment summary — overview only */}
+                {/* Sentiment summary, overview only */}
                 {activeTab === 'overview' && company.total_reviews > 0 && recommendPct !== null && (
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h3 className="font-black text-slate-950 mb-4">What reviewers say</h3>
@@ -668,7 +684,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               Write a review
             </Link>
 
-            {/* Company details — all tabs except About (shown in main on About) */}
+            {/* Company details, all tabs except About (shown in main on About) */}
             {activeTab !== 'about' && (
               <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                 <h3 className="font-black text-slate-950">Company details</h3>
@@ -676,7 +692,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               </div>
             )}
 
-            {/* Also consider — overview and reviews tabs */}
+            {/* Also consider, overview and reviews tabs */}
             {(activeTab === 'overview' || activeTab === 'reviews') && competitors.length > 0 && (
               <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h3 className="font-black text-slate-950 mb-4">Also consider</h3>
@@ -702,7 +718,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               </div>
             )}
 
-            {/* Features — overview and reviews tabs */}
+            {/* Features, overview and reviews tabs */}
             {(activeTab === 'overview' || activeTab === 'reviews') && featureGroups.length > 0 && (
               <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                 <h3 className="font-black text-slate-950">Features & Capabilities</h3>
@@ -722,7 +738,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               </div>
             )}
 
-            {/* Products — overview and reviews tabs */}
+            {/* Products, overview and reviews tabs */}
             {(activeTab === 'overview' || activeTab === 'reviews') && activeProducts.length > 0 && (
               <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
@@ -732,16 +748,30 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                   </Link>
                 </div>
                 <ul className="space-y-3">
-                  {activeProducts.slice(0, 4).map(ps => (
-                    <li key={ps.id} className="text-sm">
-                      <div className="flex items-center justify-between">
-                        <span className="font-black text-slate-800">{ps.name}</span>
-                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600 capitalize">{ps.type}</span>
-                      </div>
-                      {ps.description && <p className="text-slate-500 mt-0.5 line-clamp-2 leading-5">{ps.description}</p>}
-                      {ps.price_range && <p className="text-slate-400 text-xs mt-0.5">{ps.price_range}</p>}
-                    </li>
-                  ))}
+                  {activeProducts.slice(0, 4).map(ps => {
+                    const body = (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-slate-800">{ps.name}</span>
+                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600 capitalize">{ps.type}</span>
+                        </div>
+                        {ps.description && <p className="text-slate-500 mt-0.5 line-clamp-2 leading-5">{ps.description}</p>}
+                        {ps.price_range && <p className="text-slate-400 text-xs mt-0.5">{ps.price_range}</p>}
+                        {ps.review_count > 0 && (
+                          <p className="text-xs text-slate-400 mt-0.5">★ {ps.rating_avg.toFixed(1)} ({ps.review_count})</p>
+                        )}
+                      </>
+                    )
+                    return (
+                      <li key={ps.id} className="text-sm">
+                        {ps.slug ? (
+                          <Link href={`/company/${slug}/product/${ps.slug}`} className="block hover:opacity-70 transition-opacity">
+                            {body}
+                          </Link>
+                        ) : body}
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
             )}

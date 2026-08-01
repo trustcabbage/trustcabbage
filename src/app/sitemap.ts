@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 type CompanySlug  = { slug: string; updated_at: string }
 type CategorySlug = { slug: string }
 
-// Plain anon client — no cookies, safe inside unstable_cache
+// Plain anon client, no cookies, safe inside unstable_cache
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

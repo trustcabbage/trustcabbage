@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { QrCodePreview } from './_components/qrcode-preview'
 import { ChevronLeft, QrCode } from 'lucide-react'
 
-export const metadata: Metadata = { title: 'QR code — Dashboard' }
+export const metadata: Metadata = { title: 'QR code, Dashboard' }
 
 export default async function QrCodePage() {
   const supabase = await createClient()
@@ -46,7 +46,7 @@ export default async function QrCodePage() {
           </div>
           <div className="px-6 py-6">
             <p className="text-sm text-slate-600 mb-6 leading-relaxed">
-              Download your review QR code and place it anywhere — proposals, invoice footers, office reception, visiting cards.
+              Download your review QR code and place it anywhere, proposals, invoice footers, office reception, visiting cards.
               Clients scan it to land directly on your review form.
             </p>
             <QrCodePreview

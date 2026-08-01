@@ -7,6 +7,16 @@ import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
+// Supabase can surface a raw/empty error body (e.g. an SMTP relay failure) as
+// a non-descriptive or JSON-like message. Fall back to something readable.
+function authErrorMessage(message: string | undefined): string {
+  const fallback = 'Could not send the code. Please try again in a moment.'
+  if (!message) return fallback
+  const trimmed = message.trim()
+  if (!trimmed || trimmed.startsWith('{') || trimmed.startsWith('[')) return fallback
+  return trimmed
+}
+
 export function LoginForm({ next = '/' }: { next?: string }) {
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
@@ -20,10 +30,13 @@ export function LoginForm({ next = '/' }: { next?: string }) {
     setLoading(true)
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
     })
     setLoading(false)
-    if (error) { toast.error(error.message); return }
+    if (error) { toast.error(authErrorMessage(error.message)); return }
     toast.success('Check your email for the 6-digit code')
     setStep('otp')
     startResendCooldown()
@@ -43,11 +56,14 @@ export function LoginForm({ next = '/' }: { next?: string }) {
     setLoading(true)
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
     })
     setLoading(false)
-    if (error) { toast.error(error.message); return }
-    toast.success('New code sent — check your inbox')
+    if (error) { toast.error(authErrorMessage(error.message)); return }
+    toast.success('New code sent, check your inbox')
     setOtp('')
     startResendCooldown()
   }

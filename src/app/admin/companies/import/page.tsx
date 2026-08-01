@@ -22,7 +22,7 @@ Nykaa,https://nykaa.com,"Beauty & fashion marketplace",Mumbai,Maharashtra,2012,5
 
       {/* Template download */}
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-        <h2 className="text-base font-black text-slate-950">Step 1 — Download template</h2>
+        <h2 className="text-base font-black text-slate-950">Step 1, Download template</h2>
         <p className="text-sm text-slate-600">Use this CSV template. The <code className="bg-slate-100 px-1 rounded text-xs">category_slugs</code> column accepts pipe-separated slugs. The <code className="bg-slate-100 px-1 rounded text-xs">business_type</code> column accepts: <code className="bg-slate-100 px-1 rounded text-xs">business_services</code>, <code className="bg-slate-100 px-1 rounded text-xs">online_b2c</code>, <code className="bg-slate-100 px-1 rounded text-xs">retail_chain</code>. Leave blank to default to <code className="bg-slate-100 px-1 rounded text-xs">business_services</code>.</p>
         <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 overflow-x-auto">
           <pre className="text-xs text-slate-600 font-mono whitespace-pre">{TEMPLATE}</pre>

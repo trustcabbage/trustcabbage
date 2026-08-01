@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        // Hard disallow for SEO audit crawlers — middleware enforces this with 403
+        // Hard disallow for SEO audit crawlers, middleware enforces this with 403
         userAgent: [
           'AhrefsBot', 'SemrushBot', 'serpstatbot', 'MJ12bot', 'DotBot',
           'BLEXBot', 'PetalBot', 'Baiduspider', 'YandexBot', 'Majestic',

@@ -74,7 +74,7 @@ export function QrCodePreview({ companyName, slug, inviteUrl }: Props) {
           </div>
           <div>
             <p className="text-xs font-black text-slate-500 mb-1">Download format</p>
-            <p className="text-xs text-slate-600">600 × 600 px PNG — print-ready</p>
+            <p className="text-xs text-slate-600">600 × 600 px PNG, print-ready</p>
           </div>
         </div>
 

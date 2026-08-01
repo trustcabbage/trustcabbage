@@ -3,10 +3,10 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { InviteForm } from './_components/invite-form'
-import { ChevronLeft, Mail, Info } from 'lucide-react'
+import { ChevronLeft, Mail, Info, Terminal } from 'lucide-react'
 import { emailInviteLimit } from '@/lib/plan-limits'
 
-export const metadata: Metadata = { title: 'Email invites — Dashboard' }
+export const metadata: Metadata = { title: 'Email invites, Dashboard' }
 
 export default async function InvitesPage() {
   const supabase = await createClient()
@@ -43,6 +43,7 @@ export default async function InvitesPage() {
     .limit(50)
 
   const logs = (logsRaw ?? []) as any[]
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://trustcabbage.com'
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -81,6 +82,54 @@ export default async function InvitesPage() {
           <p className="text-xs text-violet-800 leading-relaxed">
             <span className="font-black">Tip:</span> The best time to send a review invite is immediately after completing a project or delivery. Keep the list under 20 at a time for better deliverability.
           </p>
+        </div>
+
+        {/* API */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-2">
+            <Terminal className="h-4 w-4 text-[#6d28d9]" />
+            <h2 className="font-black text-slate-950">Trigger this from your backend</h2>
+            <span className="ml-auto rounded-full bg-violet-100 text-violet-700 border border-violet-200 px-2.5 py-0.5 text-[10px] font-black">
+              Early access · Free
+            </span>
+          </div>
+          <div className="px-6 py-6 space-y-5">
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Same email, same monthly limit shown above, just triggered automatically instead of
+              typed into the form. Useful for sending an invite right when a project wraps up or a
+              contract ends, without a person doing it by hand each time.
+            </p>
+
+            <div className="rounded-xl bg-slate-950 px-5 py-4 font-mono text-xs leading-relaxed overflow-x-auto">
+              <p><span className="text-amber-300">POST</span> <span className="text-emerald-300">{siteUrl}/api/company-invite</span></p>
+              <p className="text-slate-500 mt-2">{'// Headers'}</p>
+              <p><span className="text-violet-300">Authorization:</span> <span className="text-slate-300">Bearer tc_live_your_key</span></p>
+              <p><span className="text-violet-300">Content-Type:</span> <span className="text-slate-300">application/json</span></p>
+              <p className="text-slate-500 mt-2">{'// Body'}</p>
+              <p className="text-slate-300">{'{'}</p>
+              <p className="pl-3"><span className="text-sky-300">&quot;customer_email&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;priya@example.com&quot;</span></p>
+              <p className="text-slate-300">{'}'}</p>
+            </div>
+
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-slate-400 mb-2">Responses</p>
+              <ul className="space-y-1.5 text-xs text-slate-600">
+                <li><code className="font-mono bg-emerald-50 text-emerald-700 rounded px-1.5 py-0.5 font-bold">200</code> <span className="ml-1">{'{ "status": "sent" }'}</span></li>
+                <li><code className="font-mono bg-rose-50 text-rose-700 rounded px-1.5 py-0.5 font-bold">401</code> <span className="ml-1">Missing or invalid API key</span></li>
+                <li><code className="font-mono bg-rose-50 text-rose-700 rounded px-1.5 py-0.5 font-bold">400</code> <span className="ml-1">Missing or invalid customer_email</span></li>
+                <li><code className="font-mono bg-amber-50 text-amber-700 rounded px-1.5 py-0.5 font-bold">429</code> <span className="ml-1">Monthly limit reached, same limit as the form above</span></li>
+              </ul>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3.5">
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Don&apos;t have an API key yet, or looking for the <strong>product-level</strong> API
+                (per-product reviews, a widget you can embed on your own site)? See the{' '}
+                <Link href="/dashboard/api" className="text-[#6d28d9] font-bold hover:underline">Product Reviews API</Link> page,
+                the same key works for both.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* History */}

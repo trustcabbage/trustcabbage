@@ -6,8 +6,8 @@ import { StarRating } from '@/components/reviews/star-rating'
 import { HomeSearch } from '@/components/layout/home-search'
 
 export const metadata: Metadata = {
-  title: 'Trust Cabbage — Find Companies & Brands You Can Actually Trust',
-  description: 'Real reviews from real customers. India\'s first company & brand review platform — verified reviews for service companies, online brands, and D2C stores across India.',
+  title: 'Trust Cabbage, Find Companies & Brands You Can Actually Trust',
+  description: 'Real reviews from real customers. India\'s first company & brand review platform, verified reviews for service companies, online brands, and D2C stores across India.',
 }
 
 type CategoryRow = { id: string; name: string; slug: string; icon: string | null; platform_type: string }
@@ -149,16 +149,16 @@ export default async function HomePage() {
           {/* Body paragraphs */}
           <div className="max-w-3xl mx-auto space-y-5 text-violet-100 text-base sm:text-lg leading-relaxed">
             <p>
-              When you partner with a service company, or order from an online brand — everything looks great on the surface.
+              When you partner with a service company, or order from an online brand, everything looks great on the surface.
               The website is polished. The pitch is confident. The promises are big.
               The real picture only comes after you&apos;ve signed, ordered, paid, and started working together.
             </p>
             <p>
-              Trust Cabbage exists to change that. Real clients and buyers share their honest experiences — the good,
+              Trust Cabbage exists to change that. Real clients and buyers share their honest experiences, the good,
               the not-so-good, and everything in between. So the next person making that decision doesn&apos;t have to go in blind.
             </p>
             <p>
-              Search any company, any service, any brand. See who the best in their space really are — not according to them,
+              Search any company, any service, any brand. See who the best in their space really are, not according to them,
               but according to the people who&apos;ve actually worked with them.
             </p>
           </div>
@@ -167,7 +167,7 @@ export default async function HomePage() {
           <div className="mt-14 max-w-3xl mx-auto text-center">
             <div className="inline-block border-t border-b border-white/20 py-6 px-4">
               <p className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-snug">
-                Because the best time to know about a company is before you need them — not after.
+                Because the best time to know about a company is before you need them, not after.
               </p>
             </div>
           </div>
@@ -186,7 +186,7 @@ export default async function HomePage() {
               All B2B categories <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-          <p className="text-slate-500 text-sm mb-8">Agencies, SaaS, logistics, consulting and more — read verified reviews before you sign</p>
+          <p className="text-slate-500 text-sm mb-8">Agencies, SaaS, logistics, consulting and more, read verified reviews before you sign</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {(b2bCats.length > 0 ? b2bCats : PLACEHOLDER_CATEGORIES).map((cat) => (
               <Link
@@ -219,7 +219,7 @@ export default async function HomePage() {
               All B2C categories <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-          <p className="text-slate-500 text-sm mb-8">Fashion, beauty, electronics, food and more — read real reviews before you order</p>
+          <p className="text-slate-500 text-sm mb-8">Fashion, beauty, electronics, food and more, read real reviews before you order</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {(b2cCats.length > 0 ? b2cCats : PLACEHOLDER_B2C_CATEGORIES).map((cat) => (
               <Link
@@ -251,13 +251,13 @@ export default async function HomePage() {
                 icon: Search,
                 step: '01',
                 title: 'Search any company, brand, service, or hashtag',
-                desc: 'Type a company name, a brand you\'ve heard of, or a hashtag like #PaymentGateway. The search instantly shows matching companies, categories, products, and tags — all in one dropdown.',
+                desc: 'Type a company name, a brand you\'ve heard of, or a hashtag like #PaymentGateway. The search instantly shows matching companies, categories, products, and tags, all in one dropdown.',
               },
               {
                 icon: Star,
                 step: '02',
                 title: 'Read detailed, honest reviews',
-                desc: 'Every review covers key factors — quality, delivery, customer support, communication, and more. Written by actual clients and customers, not anonymous strangers.',
+                desc: 'Every review covers key factors, quality, delivery, customer support, communication, and more. Written by actual clients and customers, not anonymous strangers.',
               },
               {
                 icon: Handshake,
@@ -297,7 +297,7 @@ export default async function HomePage() {
                 See all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-            <p className="text-xs text-slate-400 mb-8">Featured B2B listings — highest verified review scores in their category</p>
+            <p className="text-xs text-slate-400 mb-8">Featured B2B listings, highest verified review scores in their category</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {b2bFeatured.map((company) => (
                 <Link key={company.id} href={`/company/${company.slug}`} prefetch={false}
@@ -342,7 +342,7 @@ export default async function HomePage() {
                 See all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-            <p className="text-xs text-slate-400 mb-8">Featured B2C listings — highest verified review scores from real customers</p>
+            <p className="text-xs text-slate-400 mb-8">Featured B2C listings, highest verified review scores from real customers</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {b2cFeatured.map((company) => (
                 <Link key={company.id} href={`/company/${company.slug}`} prefetch={false}
@@ -398,7 +398,7 @@ export default async function HomePage() {
                 icon: Globe,
                 tag: 'For the ecosystem',
                 title: 'Raising the bar for Indian businesses & brands',
-                body: 'Too many companies win clients and customers on connections, not merit. Trust Cabbage shifts that — the best companies and brands rise, regardless of network or marketing budget.',
+                body: 'Too many companies win clients and customers on connections, not merit. Trust Cabbage shifts that, the best companies and brands rise, regardless of network or marketing budget.',
               },
             ].map(item => (
               <div key={item.tag} className="rounded-2xl bg-white/5 border border-white/10 p-6">
@@ -465,18 +465,18 @@ export default async function HomePage() {
             Make sure they find the real you.
           </h2>
           <p className="text-violet-100 text-base mb-8 max-w-xl mx-auto leading-relaxed">
-            List your company free. Claim your existing page. Start collecting verified reviews from your actual clients — and let your work speak for itself.
+            List your company free. Claim your existing page. Start collecting verified reviews from your actual clients, and let your work speak for itself.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link href="/for-businesses/add" className="rounded-xl bg-white text-[#6d28d9] font-black px-7 py-3.5 text-sm hover:bg-violet-50 transition-colors shadow-lg">
-              List my company — it&apos;s free
+              List my company, it&apos;s free
             </Link>
             <Link href="/for-businesses/add" className="rounded-xl border-2 border-white/40 text-white font-black px-7 py-3.5 text-sm hover:bg-white/10 transition-colors">
               Search if your company is already listed →
             </Link>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-violet-100">
-            {['Free to list', 'No review deletion — ever', 'GST-verified company pages'].map(p => (
+            {['Free to list', 'No review deletion, ever', 'GST-verified company pages'].map(p => (
               <span key={p} className="flex items-center gap-1.5">
                 <span className="text-white font-black">◈</span> {p}
               </span>

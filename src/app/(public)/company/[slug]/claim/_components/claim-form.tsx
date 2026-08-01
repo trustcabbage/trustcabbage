@@ -216,7 +216,7 @@ export function ClaimForm({ company, userId }: { company: Company; userId: strin
           <div>
             <h2 className="text-base font-black text-slate-950">Confirm your company type</h2>
             <p className="text-sm text-slate-500 mt-1">
-              This was set when the page was created. Correct it if needed — it affects which review questions your customers see.
+              This was set when the page was created. Correct it if needed, it affects which review questions your customers see.
             </p>
           </div>
 

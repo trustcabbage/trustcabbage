@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Browse categories — Trust Cabbage' }
+export const metadata: Metadata = { title: 'Browse categories | Trust Cabbage' }
 
 type Props = { searchParams: Promise<{ tab?: string }> }
 

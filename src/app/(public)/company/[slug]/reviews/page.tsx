@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const company = data as unknown as { name: string; total_reviews: number } | null
   if (!company) return {}
   return {
-    title: `All reviews for ${company.name} — Trust Cabbage`,
+    title: `All reviews for ${company.name} | Trust Cabbage`,
     description: `Read all ${company.total_reviews} verified reviews for ${company.name} on Trust Cabbage.`,
     alternates: { canonical: `/company/${slug}/reviews` },
   }

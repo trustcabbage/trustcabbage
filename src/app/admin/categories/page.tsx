@@ -17,9 +17,9 @@ const PLATFORM_BADGE: Record<string, { label: string; cls: string }> = {
 
 const platformTypeSelect = (defaultValue?: string) => (
   <select name="platform_type" defaultValue={defaultValue ?? 'b2b'} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-950 focus:border-[#6d28d9] focus:outline-none focus:ring-1 focus:ring-[#6d28d9] bg-white">
-    <option value="b2b">B2B — Business services</option>
-    <option value="b2c">B2C — Consumer brands</option>
-    <option value="both">Both — Serves B2B and B2C</option>
+    <option value="b2b">B2B, Business services</option>
+    <option value="b2c">B2C, Consumer brands</option>
+    <option value="both">Both, Serves B2B and B2C</option>
   </select>
 )
 
@@ -57,7 +57,7 @@ export default async function AdminCategoriesPage() {
             <div className="space-y-1.5">
               <label className={labelCls}>Parent (leave blank for top-level)</label>
               <select name="parent_id" className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-950 focus:border-[#6d28d9] focus:outline-none focus:ring-1 focus:ring-[#6d28d9] bg-white">
-                <option value="">— Top-level category —</option>
+                <option value="">Top-level category</option>
                 {parents.map(p => (
                   <option key={p.id} value={p.id}>{p.icon ? `${p.icon} ` : ''}{p.name}</option>
                 ))}
@@ -73,11 +73,11 @@ export default async function AdminCategoriesPage() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className={labelCls}>Hero image URL <span className="normal-case font-normal text-slate-400">(optional — shown as background in category page banner)</span></label>
+            <label className={labelCls}>Hero image URL <span className="normal-case font-normal text-slate-400">(optional, shown as background in category page banner)</span></label>
             <input name="image_url" placeholder="https://images.unsplash.com/..." className={inputCls} />
           </div>
           <div className="space-y-1.5">
-            <label className={labelCls}>Description <span className="normal-case font-normal text-slate-400">— supports **bold**, *italic*, line breaks, lists</span></label>
+            <label className={labelCls}>Description <span className="normal-case font-normal text-slate-400">supports **bold**, *italic*, line breaks, lists</span></label>
             <textarea
               name="description"
               rows={4}
@@ -86,7 +86,7 @@ export default async function AdminCategoriesPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className={labelCls}>Search tags <span className="normal-case font-normal text-slate-400">— space or comma separated aliases for home search (e.g. "esign api digital contracts e-signature")</span></label>
+            <label className={labelCls}>Search tags <span className="normal-case font-normal text-slate-400">space or comma separated aliases for home search (e.g. "esign api digital contracts e-signature")</span></label>
             <input
               name="search_tags"
               placeholder="e.g. esign api digital contracts e-signature document automation"
@@ -164,7 +164,7 @@ export default async function AdminCategoriesPage() {
                       <div className="space-y-1">
                         <label className={labelCls}>Parent</label>
                         <select name="parent_id" defaultValue={parent.parent_id ?? ''} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-950 focus:border-[#6d28d9] focus:outline-none focus:ring-1 focus:ring-[#6d28d9] bg-white">
-                          <option value="">— Top-level category —</option>
+                          <option value="">Top-level category</option>
                           {parents.filter(p => p.id !== parent.id).map(p => (
                             <option key={p.id} value={p.id}>{p.icon ? `${p.icon} ` : ''}{p.name}</option>
                           ))}
@@ -184,7 +184,7 @@ export default async function AdminCategoriesPage() {
                       <input name="image_url" defaultValue={parent.image_url ?? ''} placeholder="https://images.unsplash.com/..." className={inputCls} />
                     </div>
                     <div className="space-y-1">
-                      <label className={labelCls}>Description <span className="normal-case font-normal text-slate-400">— supports **bold**, *italic*, line breaks, lists</span></label>
+                      <label className={labelCls}>Description <span className="normal-case font-normal text-slate-400">supports **bold**, *italic*, line breaks, lists</span></label>
                       <textarea
                         name="description"
                         rows={5}
@@ -194,7 +194,7 @@ export default async function AdminCategoriesPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className={labelCls}>Search tags <span className="normal-case font-normal text-slate-400">— aliases for home search autocomplete</span></label>
+                      <label className={labelCls}>Search tags <span className="normal-case font-normal text-slate-400">aliases for home search autocomplete</span></label>
                       <input
                         name="search_tags"
                         defaultValue={parent.search_tags ?? ''}
@@ -262,7 +262,7 @@ export default async function AdminCategoriesPage() {
                               <div className="space-y-1">
                                 <label className={labelCls}>Parent</label>
                                 <select name="parent_id" defaultValue={child.parent_id ?? ''} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-950 focus:border-[#6d28d9] focus:outline-none focus:ring-1 focus:ring-[#6d28d9] bg-white">
-                                  <option value="">— Top-level category —</option>
+                                  <option value="">Top-level category</option>
                                   {parents.map(p => (
                                     <option key={p.id} value={p.id}>{p.icon ? `${p.icon} ` : ''}{p.name}</option>
                                   ))}
@@ -282,7 +282,7 @@ export default async function AdminCategoriesPage() {
                               <input name="image_url" defaultValue={child.image_url ?? ''} placeholder="https://images.unsplash.com/..." className={inputCls} />
                             </div>
                             <div className="space-y-1">
-                              <label className={labelCls}>Description <span className="normal-case font-normal text-slate-400">— supports **bold**, *italic*, line breaks, lists</span></label>
+                              <label className={labelCls}>Description <span className="normal-case font-normal text-slate-400">supports **bold**, *italic*, line breaks, lists</span></label>
                               <textarea
                                 name="description"
                                 rows={4}
@@ -292,7 +292,7 @@ export default async function AdminCategoriesPage() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className={labelCls}>Search tags <span className="normal-case font-normal text-slate-400">— aliases for home search autocomplete</span></label>
+                              <label className={labelCls}>Search tags <span className="normal-case font-normal text-slate-400">aliases for home search autocomplete</span></label>
                               <input
                                 name="search_tags"
                                 defaultValue={child.search_tags ?? ''}

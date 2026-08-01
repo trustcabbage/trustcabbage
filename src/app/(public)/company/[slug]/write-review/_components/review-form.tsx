@@ -48,7 +48,7 @@ interface FormData {
 
 const initialRatings = Object.fromEntries(RATING_FACTORS.map(f => [f.key, 0])) as Record<RatingKey, number>
 
-export function ReviewForm({ company, products, userId, isUnclaimed = false, refToken = null, reviewSource = null, isEmbed = false, businessType = 'business_services' }: { company: Company; products: Product[]; userId: string; isUnclaimed?: boolean; refToken?: string | null; reviewSource?: string | null; isEmbed?: boolean; businessType?: string }) {
+export function ReviewForm({ company, products, userId, isUnclaimed = false, refToken = null, reviewSource = null, isEmbed = false, businessType = 'business_services', initialProductId = null }: { company: Company; products: Product[]; userId: string; isUnclaimed?: boolean; refToken?: string | null; reviewSource?: string | null; isEmbed?: boolean; businessType?: string; initialProductId?: string | null }) {
   const router = useRouter()
   const supabase = createClient()
   const [step, setStep] = useState(0)
@@ -62,8 +62,8 @@ export function ReviewForm({ company, products, userId, isUnclaimed = false, ref
     reviewer_role: '',
     engagement_phase: '',
     association_duration: '',
-    product_service_id: null,
-    product_service_ids: [],
+    product_service_id: initialProductId,
+    product_service_ids: initialProductId ? [initialProductId] : [],
     ratings: initialRatings,
     what_went_well: '',
     what_to_improve: '',
@@ -89,7 +89,7 @@ export function ReviewForm({ company, products, userId, isUnclaimed = false, ref
     if (step === 2) return Object.values(form.ratings).every(v => v > 0)
     if (step === 3) return form.what_went_well.trim().length >= 20 && form.would_recommend
     if (step === 1 && products.length === 0) return serviceTags.length > 0
-    // step 4 (proof) is optional — always can advance
+    // step 4 (proof) is optional, always can advance
     return true
   }
 
@@ -147,7 +147,7 @@ export function ReviewForm({ company, products, userId, isUnclaimed = false, ref
     setSubmitting(false)
     if (error) { toast.error('Failed to submit review. Please try again.'); return }
 
-    // Save all selected products to junction table (graceful — won't fail if table missing)
+    // Save all selected products to junction table (graceful, won't fail if table missing)
     if (form.product_service_ids.length > 0) {
       await supabase.from('review_product_services').insert(
         form.product_service_ids.map(pid => ({ review_id: reviewRow.id, product_service_id: pid }))
@@ -229,6 +229,7 @@ export function ReviewForm({ company, products, userId, isUnclaimed = false, ref
         refToken={refToken}
         reviewSource={reviewSource}
         isEmbed={isEmbed}
+        initialProductId={initialProductId}
       />
     )
   }
@@ -323,7 +324,7 @@ export function ReviewForm({ company, products, userId, isUnclaimed = false, ref
             <>
               <h2 className="text-lg font-black text-slate-950">What did you use from {company.name}?</h2>
               <p className="text-sm text-slate-500">
-                This company doesn&apos;t have products listed yet. Tag the service or product you used — this helps others find them.
+                This company doesn&apos;t have products listed yet. Tag the service or product you used, this helps others find them.
               </p>
               <TagInput
                 value={serviceTags}
@@ -432,7 +433,7 @@ export function ReviewForm({ company, products, userId, isUnclaimed = false, ref
               className="border-slate-200 text-sm"
             />
             {form.what_went_well.length === 0 ? null : form.what_went_well.trim().length < 20 ? (
-              <p className="text-xs text-red-500 font-bold">{form.what_went_well.trim().length} / 20 chars minimum — keep going</p>
+              <p className="text-xs text-red-500 font-bold">{form.what_went_well.trim().length} / 20 chars minimum, keep going</p>
             ) : (
               <p className="text-xs text-green-600 font-bold">✓ {form.what_went_well.trim().length} chars</p>
             )}
@@ -531,7 +532,7 @@ export function ReviewForm({ company, products, userId, isUnclaimed = false, ref
             <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 p-10 cursor-pointer hover:border-[#6d28d9] hover:bg-violet-50 transition-colors">
               <Upload className="h-6 w-6 text-slate-400" />
               <span className="text-sm font-bold text-slate-600">Click to upload proof</span>
-              <span className="text-xs text-slate-400">Invoice, contract, email screenshot — PDF, JPG, PNG (max 10 MB)</span>
+              <span className="text-xs text-slate-400">Invoice, contract, email screenshot, PDF, JPG, PNG (max 10 MB)</span>
               <input
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"

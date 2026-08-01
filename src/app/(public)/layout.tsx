@@ -1,5 +1,7 @@
+import { Suspense } from 'react'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
+import { EmbedAwareChrome } from '@/components/layout/embed-aware-chrome'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -30,10 +32,10 @@ export default async function PublicLayout({ children }: { children: React.React
   }
 
   return (
-    <>
-      <Navbar user={navUser} />
-      <main className="flex-1">{children}</main>
-      <Footer />
-    </>
+    <Suspense fallback={<><Navbar user={navUser} /><main className="flex-1">{children}</main><Footer /></>}>
+      <EmbedAwareChrome navbar={<Navbar user={navUser} />} footer={<Footer />}>
+        {children}
+      </EmbedAwareChrome>
+    </Suspense>
   )
 }

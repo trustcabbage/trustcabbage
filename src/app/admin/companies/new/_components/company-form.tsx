@@ -81,6 +81,8 @@ export function CompanyForm({ categories, businessModels, mode, initialData }: C
   const [products, setProducts] = useState<Product[]>(
     initialData?.products ?? [{ name: '', type: 'service', description: '', price_range: '' }]
   )
+  const [isFeatured, setIsFeatured] = useState<boolean>(initialData?.is_featured ?? false)
+  const [isVerified, setIsVerified] = useState<boolean>(initialData?.is_verified ?? false)
 
   function updateInfo(patch: Partial<typeof info>) {
     setInfo(prev => {
@@ -156,6 +158,8 @@ export function CompanyForm({ categories, businessModels, mode, initialData }: C
       logo_url: logoUrl,
       business_model_id: businessModelId || null,
       business_type: businessType || 'business_services',
+      is_featured: isFeatured,
+      is_verified: isVerified,
       status: 'unclaimed',
       created_by_admin: true,
     }
@@ -265,7 +269,7 @@ export function CompanyForm({ categories, businessModels, mode, initialData }: C
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label className="text-xs font-black uppercase tracking-wide text-slate-400">
-              Business model <span className="normal-case font-normal text-slate-400">— how does this company operate?</span>
+              Business model <span className="normal-case font-normal text-slate-400">how does this company operate?</span>
             </Label>
             <div className="flex flex-wrap gap-2">
               <button
@@ -420,6 +424,37 @@ export function CompanyForm({ categories, businessModels, mode, initialData }: C
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Admin flags */}
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <h2 className="text-base font-black text-slate-950">Admin flags</h2>
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isFeatured}
+              onChange={e => setIsFeatured(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 accent-[#6d28d9]"
+            />
+            <div>
+              <p className="text-sm font-black text-slate-800">Featured</p>
+              <p className="text-xs text-slate-400">Shown first in category listings with a Featured badge</p>
+            </div>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isVerified}
+              onChange={e => setIsVerified(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 accent-[#6d28d9]"
+            />
+            <div>
+              <p className="text-sm font-black text-slate-800">Verified</p>
+              <p className="text-xs text-slate-400">Shows a Verified badge on the company page and in listings</p>
+            </div>
+          </label>
         </div>
       </div>
 

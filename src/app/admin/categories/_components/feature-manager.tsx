@@ -41,7 +41,7 @@ export function FeatureManager({ subcategoryId, subcategoryName }: { subcategory
   return (
     <div className="mt-4 pt-4 border-t border-violet-100">
       <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">
-        Features <span className="normal-case font-normal text-slate-400">— predefined capabilities buyers can filter by</span>
+        Features <span className="normal-case font-normal text-slate-400">predefined capabilities buyers can filter by</span>
       </p>
 
       <div className="flex flex-wrap gap-2 mb-3 min-h-[28px]">

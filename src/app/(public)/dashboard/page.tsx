@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { StarRating } from '@/components/reviews/star-rating'
-import { CheckCircle, AlertCircle, ExternalLink, Mail, ArrowRight, Code2, QrCode, Settings } from 'lucide-react'
+import { CheckCircle, AlertCircle, ExternalLink, Mail, ArrowRight, Code2, QrCode, Settings, BarChart2, Star, Terminal } from 'lucide-react'
 import { ShareTools } from './_components/share-tools'
 
 export default async function DashboardPage() {
@@ -38,6 +38,26 @@ export default async function DashboardPage() {
   const categories = ((categoriesRaw ?? []) as any[]).map(r => r.categories).filter(Boolean)
   const products = (productsRaw ?? []) as any[]
   const recentReviews = (recentReviewsRaw ?? []) as any[]
+
+  // Unanswered product questions across all of this company's products
+  let unansweredCount = 0
+  const productIds = products.map(p => p.id)
+  if (productIds.length > 0) {
+    const { data: questionRows } = await supabase
+      .from('product_questions')
+      .select('id')
+      .in('product_id', productIds)
+    const questionIds = ((questionRows ?? []) as any[]).map(q => q.id)
+    if (questionIds.length > 0) {
+      const { data: companyAnswers } = await supabase
+        .from('product_answers')
+        .select('question_id')
+        .in('question_id', questionIds)
+        .eq('is_company_answer', true)
+      const answeredIds = new Set(((companyAnswers ?? []) as any[]).map(a => a.question_id))
+      unansweredCount = questionIds.filter(id => !answeredIds.has(id)).length
+    }
+  }
 
   // Profile completeness checklist
   const checks = [
@@ -100,6 +120,25 @@ export default async function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Unanswered product questions */}
+        {unansweredCount > 0 && (
+          <Link
+            href={`/company/${co.slug}?tab=products`}
+            className="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-5 py-4 hover:bg-amber-100/60 transition-colors"
+          >
+            <div className="h-9 w-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="h-4.5 w-4.5 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black text-amber-900">
+                {unansweredCount} unanswered question{unansweredCount !== 1 ? 's' : ''} on your products
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">Answer them to help buyers decide, unanswered questions cost sales.</p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-amber-600 flex-shrink-0" />
+          </Link>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -232,6 +271,29 @@ export default async function DashboardPage() {
               )}
             </div>
 
+            {/* Get Featured CTA */}
+            {!co.is_featured && (
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200 shadow-sm p-5">
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <Star className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-slate-900">Get featured</p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      Featured companies appear first in category listings with a Featured badge, more visibility, more reviews.
+                    </p>
+                    <a
+                      href={`mailto:hello@trustcabbage.com?subject=Featured listing request, ${co.name}&body=Hi, I'd like to get ${co.name} featured on Trust Cabbage.`}
+                      className="inline-block mt-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-black px-4 py-2 text-xs transition-colors"
+                    >
+                      Request featured slot →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Share tools */}
             <ShareTools slug={co.slug} companyName={co.name} inviteToken={co.invite_token ?? ''} />
 
@@ -241,6 +303,16 @@ export default async function DashboardPage() {
                 <h2 className="font-black text-slate-950 text-sm">Review collection tools</h2>
               </div>
               <div className="px-5 py-4 space-y-3">
+                <Link href="/dashboard/analytics" className="flex items-center gap-3 hover:bg-slate-50 rounded-xl px-1 py-1 -mx-1 transition-colors">
+                  <div className="h-7 w-7 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
+                    <BarChart2 className="h-3.5 w-3.5 text-violet-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-slate-700">Analytics</p>
+                    <p className="text-[10px] text-slate-400">Review trends, rating breakdown, sources</p>
+                  </div>
+                  <ArrowRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                </Link>
                 <Link href="/dashboard/invites" className="flex items-center gap-3 hover:bg-slate-50 rounded-xl px-1 py-1 -mx-1 transition-colors">
                   <div className="h-7 w-7 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
                     <Mail className="h-3.5 w-3.5 text-violet-600" />
@@ -268,6 +340,16 @@ export default async function DashboardPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-black text-slate-700">QR code</p>
                     <p className="text-[10px] text-slate-400">Download print-ready PNG for proposals &amp; invoices</p>
+                  </div>
+                  <ArrowRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                </Link>
+                <Link href="/dashboard/api" className="flex items-center gap-3 hover:bg-slate-50 rounded-xl px-1 py-1 -mx-1 transition-colors">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <Terminal className="h-3.5 w-3.5 text-emerald-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-slate-700">Product Reviews API</p>
+                    <p className="text-[10px] text-slate-400">Collect reviews per product, via API or widget</p>
                   </div>
                   <ArrowRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
                 </Link>

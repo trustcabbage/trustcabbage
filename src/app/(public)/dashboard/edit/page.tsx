@@ -6,7 +6,7 @@ import { ProfileEditForm } from './_components/profile-edit-form'
 import { ProductsManager } from './_components/products-manager'
 import { ChevronLeft } from 'lucide-react'
 
-export const metadata: Metadata = { title: 'Edit profile — Dashboard' }
+export const metadata: Metadata = { title: 'Edit profile, Dashboard' }
 
 export default async function DashboardEditPage() {
   const supabase = await createClient()

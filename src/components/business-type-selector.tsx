@@ -78,7 +78,7 @@ export function BusinessTypeSelector({ value, onChange, error }: Props) {
       )}
 
       <p className="mt-3 text-xs text-slate-400">
-        Not sure? Think about who their customers are — other businesses (first option) or regular people buying for themselves (second or third option).
+        Not sure? Think about who their customers are, other businesses (first option) or regular people buying for themselves (second or third option).
       </p>
     </div>
   )

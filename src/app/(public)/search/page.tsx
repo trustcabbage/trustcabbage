@@ -27,7 +27,7 @@ type ProductRow = {
 
 type TagRow = { id: string; name: string; slug: string }
 
-export const metadata: Metadata = { title: 'Search — Trust Cabbage' }
+export const metadata: Metadata = { title: 'Search | Trust Cabbage' }
 
 function buildUrl(current: Record<string, string>, override: Record<string, string | null>) {
   const p = new URLSearchParams(current)
@@ -200,7 +200,7 @@ export default async function SearchPage({ searchParams }: Props) {
           <SearchInput initialQuery={q} />
         </div>
 
-        {/* Tabs — only shown when there's an active query */}
+        {/* Tabs, only shown when there's an active query */}
         {q && <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <nav className="flex gap-0 -mb-px">
             {TABS.map(t => {
@@ -236,7 +236,7 @@ export default async function SearchPage({ searchParams }: Props) {
       {q && <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <div className={tab === 'companies' ? 'flex gap-8' : ''}>
 
-          {/* Sidebar — companies tab only */}
+          {/* Sidebar, companies tab only */}
           {tab === 'companies' && (
             <aside className="hidden lg:block w-52 shrink-0">
 
@@ -340,7 +340,7 @@ export default async function SearchPage({ searchParams }: Props) {
           {/* Main results */}
           <div className="flex-1 min-w-0">
 
-            {/* Type filter pills — companies tab only */}
+            {/* Type filter pills, companies tab only */}
             {tab === 'companies' && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {[

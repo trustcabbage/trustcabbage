@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { BusinessTypeSettings } from './_components/business-type-settings'
 
-export const metadata: Metadata = { title: 'Company settings — Trust Cabbage' }
+export const metadata: Metadata = { title: 'Company settings | Trust Cabbage' }
 
 export default async function DashboardSettingsPage() {
   const supabase = await createClient()

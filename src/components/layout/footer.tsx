@@ -12,7 +12,7 @@ export function Footer() {
               <img src="/logo-icon.png.png" alt="Trust Cabbage" className="h-8 w-auto" />
             </div>
             <p className="text-slate-400 leading-relaxed text-xs mb-3">
-              Trust Cabbage — India&apos;s trust layer.
+              Trust Cabbage, India&apos;s trust layer.
             </p>
             <p className="text-slate-500 leading-relaxed text-xs">
               India&apos;s first detailed product and services review platform. Read, write and share!
@@ -37,6 +37,8 @@ export function Footer() {
               <li><Link href="/for-businesses/add" className="hover:text-[#a78bfa] transition-colors">List your company</Link></li>
               <li><Link href="/for-businesses/add" className="hover:text-[#a78bfa] transition-colors">Claim your page</Link></li>
               <li><Link href="/for-businesses" className="hover:text-[#a78bfa] transition-colors">For business owners</Link></li>
+              <li><Link href="/for-businesses/product-reviews" className="hover:text-[#a78bfa] transition-colors">Product reviews API</Link></li>
+              <li><Link href="/for-businesses/integrations" className="hover:text-[#a78bfa] transition-colors">Widget & QR guide</Link></li>
               <li><span className="opacity-50 cursor-not-allowed">Pricing</span></li>
             </ul>
           </div>

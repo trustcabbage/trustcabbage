@@ -48,7 +48,7 @@ export function InviteForm({ monthUsed, monthLimit }: { monthUsed: number; month
             placeholder={"client1@company.in\nclient2@company.in\nclient3@company.in"}
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-colors font-mono resize-none"
           />
-          <p className="text-[10px] text-slate-400 mt-1.5">One email per line — or separate with commas or semicolons</p>
+          <p className="text-[10px] text-slate-400 mt-1.5">One email per line, or separate with commas or semicolons</p>
         </div>
 
         <button

@@ -14,7 +14,7 @@ export function ReplyForm({ reviewId, existingReply }: Props) {
   const [state, action, pending] = useActionState(replyToReview, undefined)
 
   if (state?.success && !open) {
-    // reply submitted — form stays closed, parent re-renders with new reply via revalidatePath
+    // reply submitted, form stays closed, parent re-renders with new reply via revalidatePath
   }
 
   return (

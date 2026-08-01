@@ -1,4 +1,5 @@
-﻿import { ThumbsUp, CheckCircle, Building2 } from 'lucide-react'
+﻿import Link from 'next/link'
+import { ThumbsUp, CheckCircle, Building2 } from 'lucide-react'
 import { StarRating } from '@/components/reviews/star-rating'
 import { ReplyForm } from './reply-form'
 import { markHelpful } from '../_actions'
@@ -54,7 +55,16 @@ export function ReviewCard({ review, companySlug, reviewTags = [], isOwner = fal
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-black text-slate-950 text-sm">{author}</span>
+              {!review.is_anonymous && review.users?.id ? (
+                <Link
+                  href={`/reviewer/${review.users.id}`}
+                  className="font-black text-slate-950 text-sm hover:text-[#6d28d9] transition-colors"
+                >
+                  {author}
+                </Link>
+              ) : (
+                <span className="font-black text-slate-950 text-sm">{author}</span>
+              )}
               {review.is_verified_buyer && (
                 <span className="flex items-center gap-0.5 text-xs text-[#6d28d9] font-bold">
                   <CheckCircle className="h-3 w-3" /> Verified buyer
@@ -128,7 +138,7 @@ export function ReviewCard({ review, companySlug, reviewTags = [], isOwner = fal
           }>
             {review.would_recommend === 'yes' ? 'Yes' : review.would_recommend === 'no' ? 'No' : 'Conditionally'}
           </span>
-          {review.recommend_reason && ` — ${review.recommend_reason}`}
+          {review.recommend_reason && `, ${review.recommend_reason}`}
         </p>
       )}
 
@@ -164,7 +174,7 @@ export function ReviewCard({ review, companySlug, reviewTags = [], isOwner = fal
         </div>
       )}
 
-      {/* Reply form — only for company owner */}
+      {/* Reply form, only for company owner */}
       {isOwner && (
         <ReplyForm
           reviewId={review.id}

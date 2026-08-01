@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { CheckCircle, Search, PenLine, Star, Link2, Mail, Code2, QrCode, ShieldCheck, X, ArrowRight, Zap, BarChart3, MessageSquareDot } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'For Businesses — Trust Cabbage',
+  title: 'For Businesses | Trust Cabbage',
   description: 'List your B2B company on Trust Cabbage or claim your existing page. Collect verified reviews, respond publicly, and get found by buyers. Free forever.',
 }
 
@@ -19,7 +19,7 @@ const PAGE_CARDS = [
   {
     num: '02',
     title: 'Your services',
-    body: 'List exactly what you offer. Buyers can filter reviews by specific service — so only the most relevant reviews surface.',
+    body: 'List exactly what you offer. Buyers can filter reviews by specific service, so only the most relevant reviews surface.',
     color: 'from-sky-500 to-blue-600',
     light: 'bg-sky-50 border-sky-100',
     text: 'text-sky-700',
@@ -35,7 +35,7 @@ const PAGE_CARDS = [
   {
     num: '04',
     title: 'Your rating',
-    body: 'A Trust Cabbage score (1–5) shown in Google search results via structured data — buyers see your stars before they even click.',
+    body: 'A Trust Cabbage score (1–5) shown in Google search results via structured data, buyers see your stars before they even click.',
     color: 'from-amber-400 to-orange-500',
     light: 'bg-amber-50 border-amber-100',
     text: 'text-amber-700',
@@ -56,17 +56,17 @@ const TOOLS = [
     icon: Mail,
     title: 'Email invites',
     body: 'Upload your client list. We send branded invite emails on your behalf via Resend. 100 invites/month included, more on higher plans.',
-    badge: 'Coming soon',
-    badgeColor: 'bg-slate-100 text-slate-500 border border-slate-200',
+    badge: 'Live now',
+    badgeColor: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
     iconBg: 'bg-sky-100',
     iconColor: 'text-sky-600',
   },
   {
     icon: Code2,
     title: 'Website widget',
-    body: 'A small badge for your website showing your Trust Cabbage rating. One line of code. Updates automatically as new reviews come in.',
-    badge: 'Coming soon',
-    badgeColor: 'bg-slate-100 text-slate-500 border border-slate-200',
+    body: 'A rating badge for your website that opens a popup review form on click. One line of code. Updates automatically as new reviews come in.',
+    badge: 'Live now',
+    badgeColor: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
     iconBg: 'bg-emerald-100',
     iconColor: 'text-emerald-600',
   },
@@ -74,8 +74,8 @@ const TOOLS = [
     icon: QrCode,
     title: 'QR code',
     body: 'Download your review QR code. Put it on proposals, invoice footers, or office reception. Clients scan and review instantly.',
-    badge: 'Coming soon',
-    badgeColor: 'bg-slate-100 text-slate-500 border border-slate-200',
+    badge: 'Live now',
+    badgeColor: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
     iconBg: 'bg-rose-100',
     iconColor: 'text-rose-600',
   },
@@ -157,7 +157,7 @@ const CANNOT_DO = [
   'You cannot delete or hide individual reviews',
   'You cannot edit what a reviewer wrote',
   'Paid plans do not affect your rating or review visibility',
-  'You can flag factually incorrect reviews for admin review — but not remove them',
+  'You can flag factually incorrect reviews for admin review, but not remove them',
 ]
 
 export default function ForBusinessesPage() {
@@ -185,7 +185,7 @@ export default function ForBusinessesPage() {
             </span>
           </h1>
           <p className="text-violet-200/65 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10">
-            Trust Cabbage gives Indian B2B companies a verified, permanent home for their client reviews — so buyers can find you and trust you before the first call.
+            Trust Cabbage gives Indian B2B companies a verified, permanent home for their client reviews, so buyers can find you and trust you before the first call.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
@@ -193,7 +193,7 @@ export default function ForBusinessesPage() {
               href="/for-businesses/add"
               className="inline-flex items-center gap-2 rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-8 py-4 text-sm transition-all shadow-lg shadow-violet-900/50 hover:shadow-violet-700/40 hover:-translate-y-0.5"
             >
-              Claim your company page — free <ArrowRight className="h-4 w-4" />
+              Claim your company page, free <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="#how-to-get-on"
@@ -219,7 +219,7 @@ export default function ForBusinessesPage() {
         </div>
       </section>
 
-      {/* ── Problem — split layout ── */}
+      {/* ── Problem, split layout ── */}
       <section className="bg-slate-950 py-0">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2">
@@ -240,7 +240,7 @@ export default function ForBusinessesPage() {
                 Let your clients&apos; words open doors you couldn&apos;t knock on.
               </h2>
               <p className="text-slate-400 leading-relaxed">
-                Your verified client reviews stay permanently on your page — searchable, Google-indexed, and visible to every buyer who looks you up. The best companies rise, regardless of budget.
+                Your verified client reviews stay permanently on your page, searchable, Google-indexed, and visible to every buyer who looks you up. The best companies rise, regardless of budget.
               </p>
             </div>
           </div>
@@ -363,6 +363,53 @@ export default function ForBusinessesPage() {
               </div>
             ))}
           </div>
+          <div className="text-center mt-8">
+            <Link
+              href="/for-businesses/integrations"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/20 text-white/80 font-black px-6 py-3 text-sm hover:bg-white/8 hover:border-white/30 transition-colors"
+            >
+              Read the integration guide <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Product Reviews API promo ── */}
+      <section className="bg-white py-16">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="rounded-3xl bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4c1d95] p-8 sm:p-12 relative overflow-hidden">
+            <div className="absolute -top-20 -right-20 w-72 h-72 bg-violet-500/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full bg-fuchsia-400/15 border border-fuchsia-400/25 text-fuchsia-300 px-3 py-1 text-xs font-black uppercase tracking-widest mb-4">
+                  <Zap className="h-3 w-3" /> New · Early access
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-3">
+                  Product-level reviews, collected right on your order pages.
+                </h2>
+                <p className="text-violet-200/60 text-sm leading-relaxed mb-6">
+                  One snippet collects verified reviews per product after every purchase, displayed on
+                  your site, hosted on Trust Cabbage, indexed by Google. Research shows displaying reviews
+                  lifts conversion by up to 270%.
+                </p>
+                <Link
+                  href="/for-businesses/product-reviews"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white text-[#6d28d9] font-black px-6 py-3 text-sm hover:bg-violet-50 transition-colors"
+                >
+                  Explore the Product Reviews API <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="hidden lg:block">
+                <div className="rounded-2xl bg-slate-950/60 border border-white/10 p-5 font-mono text-xs leading-relaxed">
+                  <p className="text-slate-500 mb-2">{'<!-- your order confirmation page -->'}</p>
+                  <p><span className="text-sky-300">{'<script'}</span></p>
+                  <p className="pl-3"><span className="text-violet-300">src</span><span className="text-slate-400">=</span><span className="text-emerald-300">&quot;trustcabbage.com/api/widget/product.js&quot;</span></p>
+                  <p className="pl-3"><span className="text-violet-300">data-product-id</span><span className="text-slate-400">=</span><span className="text-emerald-300">&quot;SKU-1042&quot;</span></p>
+                  <p><span className="text-sky-300">{'></script>'}</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -384,13 +431,13 @@ export default function ForBusinessesPage() {
               </div>
               <div className="flex-1">
                 <p className="font-black text-slate-950 mb-0.5">All features are free during early access</p>
-                <p className="text-sm text-slate-500">We&apos;re in early access — every feature on every plan is available at no cost. Paid plans will launch later; you&apos;ll be notified before anything changes.</p>
+                <p className="text-sm text-slate-500">We&apos;re in early access, every feature on every plan is available at no cost. Paid plans will launch later; you&apos;ll be notified before anything changes.</p>
               </div>
               <Link
                 href="/for-businesses/add"
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-black px-6 py-3 text-sm whitespace-nowrap hover:opacity-90 transition-opacity flex-shrink-0"
               >
-                Get started — free <ArrowRight className="h-4 w-4" />
+                Get started, free <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -443,10 +490,10 @@ export default function ForBusinessesPage() {
                 <ShieldCheck className="h-8 w-8 text-rose-400" />
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-white mb-4">
-                Our promise to buyers — and why it makes your reviews more valuable.
+                Our promise to buyers, and why it makes your reviews more valuable.
               </h2>
               <p className="text-slate-400 leading-relaxed text-sm">
-                These rules are non-negotiable. They&apos;re what makes a 4.6 on Trust Cabbage actually mean something — to you, and to every buyer who reads it.
+                These rules are non-negotiable. They&apos;re what makes a 4.6 on Trust Cabbage actually mean something, to you, and to every buyer who reads it.
               </p>
             </div>
             <div className="space-y-3">
@@ -491,11 +538,11 @@ export default function ForBusinessesPage() {
               href="/for-businesses/add"
               className="inline-flex items-center gap-2 rounded-xl border-2 border-white/30 text-white font-black px-8 py-4 text-sm hover:bg-white/10 transition-colors"
             >
-              <PenLine className="h-4 w-4" /> Add my company — free
+              <PenLine className="h-4 w-4" /> Add my company, free
             </Link>
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-violet-200/60">
-            {['Free to list', 'No review deletion — ever', 'GST-verified company pages'].map(p => (
+            {['Free to list', 'No review deletion, ever', 'GST-verified company pages'].map(p => (
               <span key={p} className="flex items-center gap-1.5">
                 <CheckCircle className="h-3.5 w-3.5 text-violet-400" /> {p}
               </span>

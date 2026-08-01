@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Our Review Policy — Trust Cabbage',
-  description: 'How reviews work on Trust Cabbage — who can write them, what they must contain, and how we protect their integrity.',
+  title: 'Our Review Policy | Trust Cabbage',
+  description: 'How reviews work on Trust Cabbage, who can write them, what they must contain, and how we protect their integrity.',
 }
 
 const sections = [
@@ -26,7 +26,7 @@ const sections = [
             </li>
           ))}
         </ul>
-        <p>You do not need to create a full account to write a review — but you must verify your email address before your review is published. This is not optional. Every review on this platform is tied to a verified identity.</p>
+        <p>You do not need to create a full account to write a review, but you must verify your email address before your review is published. This is not optional. Every review on this platform is tied to a verified identity.</p>
       </div>
     ),
   },
@@ -37,10 +37,10 @@ const sections = [
       <div className="space-y-4 text-sm leading-relaxed">
         {[
           { step: '1', title: 'Identity verification', body: 'Before your review is published, you verify your email address via a one-time code sent to your inbox. No review goes live without this step.' },
-          { step: '2', title: 'Association declaration', body: 'You declare your relationship with the company — current client, past client, evaluator, consumer, or partner — and the phase of your engagement. This context is shown alongside your review so readers understand whose perspective they are reading.' },
-          { step: '3', title: 'Rating', body: 'You rate the company across the factors most relevant to your type of experience. For B2B companies — staff behaviour, service quality, communication, billing, after-sales support, and delivery. For online brands — product accuracy, packaging, delivery speed, returns experience, value for money, and customer support.' },
+          { step: '2', title: 'Association declaration', body: 'You declare your relationship with the company, current client, past client, evaluator, consumer, or partner, and the phase of your engagement. This context is shown alongside your review so readers understand whose perspective they are reading.' },
+          { step: '3', title: 'Rating', body: 'You rate the company across the factors most relevant to your type of experience. For B2B companies, staff behaviour, service quality, communication, billing, after-sales support, and delivery. For online brands, product accuracy, packaging, delivery speed, returns experience, value for money, and customer support.' },
           { step: '4', title: 'Written review', body: 'You answer structured questions that go beyond a star rating. What went well. What could have been better. Whether you would recommend them. And anything specific worth sharing.' },
-          { step: '5', title: 'Optional proof upload', body: 'Upload a document, invoice, agreement, order confirmation, or any evidence of your association with the company. This earns you a Verified Buyer or Verified Client badge on your review — and gives your experience more weight in the company\'s overall rating.' },
+          { step: '5', title: 'Optional proof upload', body: 'Upload a document, invoice, agreement, order confirmation, or any evidence of your association with the company. This earns you a Verified Buyer or Verified Client badge on your review, and gives your experience more weight in the company\'s overall rating.' },
         ].map(({ step, title, body }) => (
           <div key={step} className="flex gap-4">
             <div className="h-7 w-7 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -68,7 +68,7 @@ const sections = [
           { label: 'Focused on the experience, not the person', body: 'Describe how a company behaved, not individual people by name. Review the business relationship, not individuals personally.' },
         ].map(({ label, body }) => (
           <div key={label}>
-            <span className="font-black text-slate-950">{label} — </span>
+            <span className="font-black text-slate-950">{label}, </span>
             <span className="text-slate-600">{body}</span>
           </div>
         ))}
@@ -90,7 +90,7 @@ const sections = [
           <div key={label} className="flex gap-3">
             <span className="mt-1 text-rose-500 flex-shrink-0 font-black text-xs">✕</span>
             <div>
-              <span className="font-black text-slate-950">{label} — </span>
+              <span className="font-black text-slate-950">{label}, </span>
               <span className="text-slate-600">{body}</span>
             </div>
           </div>
@@ -114,10 +114,10 @@ const sections = [
     heading: 'Flagging a Review',
     content: (
       <div className="space-y-3 text-slate-600 text-sm leading-relaxed">
-        <p>Any user can flag a review they believe violates this policy. Companies can flag reviews through their dashboard. Flagging a review does not remove it — it places it in a queue for our team to investigate.</p>
+        <p>Any user can flag a review they believe violates this policy. Companies can flag reviews through their dashboard. Flagging a review does not remove it, it places it in a queue for our team to investigate.</p>
         <p>Our team reviews every flag and responds within 48 hours. We consider both the reviewer's account history and the company's claim before making any decision.</p>
         <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-amber-800">
-          <span className="font-black">What flagging cannot do — </span>a company cannot use the flagging system to remove a negative review simply because they disagree with it or find it uncomfortable. A negative experience honestly described is a valid review. Disagreement with a review is not grounds for its removal.
+          <span className="font-black">What flagging cannot do, </span>a company cannot use the flagging system to remove a negative review simply because they disagree with it or find it uncomfortable. A negative experience honestly described is a valid review. Disagreement with a review is not grounds for its removal.
         </div>
       </div>
     ),
@@ -130,7 +130,7 @@ const sections = [
         <p>Reviews are removed only when:</p>
         <ul className="space-y-1.5 ml-1">
           {[
-            'The review is confirmed to be fake — written by someone with no genuine association with the company',
+            'The review is confirmed to be fake, written by someone with no genuine association with the company',
             'The review contains demonstrably false factual claims that materially misrepresent the company',
             'The review was written in exchange for an incentive',
             'The review contains personal attacks on named individuals',
@@ -151,7 +151,7 @@ const sections = [
     heading: 'Editing Your Review',
     content: (
       <p className="text-slate-600 text-sm leading-relaxed">
-        You can edit your review within 24 hours of submission. After that, your review is locked. If your experience with a company changes significantly — for better or worse — contact us and we will consider updating your review with a note indicating it has been revised and why.
+        You can edit your review within 24 hours of submission. After that, your review is locked. If your experience with a company changes significantly, for better or worse, contact us and we will consider updating your review with a note indicating it has been revised and why.
       </p>
     ),
   },
@@ -190,7 +190,7 @@ export default function ReviewPolicyPage() {
             Our Review Policy
           </h1>
           <p className="text-slate-300 text-base mt-4 leading-relaxed max-w-xl">
-            Every review on Trust Cabbage is someone's real experience — written honestly, verified independently, and published permanently.
+            Every review on Trust Cabbage is someone's real experience, written honestly, verified independently, and published permanently.
           </p>
         </div>
       </section>

@@ -6,7 +6,7 @@ import { AddCompanyForm } from './_components/add-company-form'
 import { Search, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'List your company — Trust Cabbage',
+  title: 'List your company | Trust Cabbage',
   description: 'Search if your company is already listed and claim it, or create a new page in minutes.',
 }
 
@@ -63,7 +63,7 @@ export default async function AddCompanyPage({ searchParams }: Props) {
             Get your company on Trust Cabbage
           </h1>
           <p className="text-violet-200/70 text-sm max-w-lg">
-            Search first — your company may already be listed. If it is, claim it. If not, create a new page below.
+            Search first, your company may already be listed. If it is, claim it. If not, create a new page below.
           </p>
         </div>
       </section>
@@ -122,7 +122,7 @@ export default async function AddCompanyPage({ searchParams }: Props) {
                   ))}
                 </>
               ) : (
-                <p className="text-sm text-slate-500 py-2">&ldquo;{query}&rdquo; is not listed yet — create it below.</p>
+                <p className="text-sm text-slate-500 py-2">&ldquo;{query}&rdquo; is not listed yet, create it below.</p>
               )}
             </div>
           )}

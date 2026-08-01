@@ -10,9 +10,9 @@ function getLoginContext(next?: string): { title: string; subtitle: string } {
   if (!next) return { title: 'Sign in', subtitle: "We'll send a one-time code to your email." }
   const n = decodeURIComponent(next)
   if (n.startsWith('/for-businesses/add'))
-    return { title: 'Verify to list your company', subtitle: 'Enter your email to continue — we\'ll send a one-time code.' }
+    return { title: 'Verify to list your company', subtitle: 'Enter your email to continue, we\'ll send a one-time code.' }
   if (n.includes('/write-review'))
-    return { title: 'Verify to write your review', subtitle: 'Enter your email to continue — we\'ll send a one-time code.' }
+    return { title: 'Verify to write your review', subtitle: 'Enter your email to continue, we\'ll send a one-time code.' }
   if (n.includes('/claim'))
     return { title: 'Verify to claim your page', subtitle: 'Enter your email to continue claiming your company page.' }
   if (n.startsWith('/dashboard'))

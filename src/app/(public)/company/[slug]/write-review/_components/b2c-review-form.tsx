@@ -44,6 +44,7 @@ export function B2cReviewForm({
   refToken = null,
   reviewSource = null,
   isEmbed = false,
+  initialProductId = null,
 }: {
   company: Company
   products: Product[]
@@ -52,6 +53,7 @@ export function B2cReviewForm({
   refToken?: string | null
   reviewSource?: string | null
   isEmbed?: boolean
+  initialProductId?: string | null
 }) {
   const router = useRouter()
   const supabase = createClient()
@@ -72,7 +74,7 @@ export function B2cReviewForm({
   })
 
   // Step 1: product selection
-  const [productServiceIds, setProductServiceIds] = useState<string[]>([])
+  const [productServiceIds, setProductServiceIds] = useState<string[]>(initialProductId ? [initialProductId] : [])
 
   // Step 2: ratings
   const [b2cRatings, setB2cRatings] = useState<Record<B2cRatingKey, number>>(initialB2cRatings)
@@ -242,7 +244,7 @@ export function B2cReviewForm({
           <div className="space-y-5">
             <h2 className="text-lg font-black text-slate-950">Tell us about your purchase</h2>
 
-            {/* purchase_channel — retail only, shown first */}
+            {/* purchase_channel, retail only, shown first */}
             {isRetail && (
               <div className="space-y-1.5">
                 <Label className="text-xs font-black uppercase tracking-wide text-slate-400">
@@ -361,7 +363,7 @@ export function B2cReviewForm({
               <>
                 <h2 className="text-lg font-black text-slate-950">What did you buy from {company.name}?</h2>
                 <p className="text-sm text-slate-500">
-                  Tag the product or service you bought — this helps others find it.
+                  Tag the product or service you bought, this helps others find it.
                 </p>
                 <TagInput
                   value={serviceTags}
@@ -484,14 +486,14 @@ export function B2cReviewForm({
               </Label>
               <Textarea
                 id="went_well"
-                placeholder="Tell others what you loved — product quality, packaging, delivery speed…"
+                placeholder="Tell others what you loved, product quality, packaging, delivery speed…"
                 value={written.what_went_well}
                 onChange={e => setWritten(prev => ({ ...prev, what_went_well: e.target.value }))}
                 rows={4}
                 className="border-slate-200 text-sm"
               />
               {written.what_went_well.length === 0 ? null : written.what_went_well.trim().length < 20 ? (
-                <p className="text-xs text-red-500 font-bold">{written.what_went_well.trim().length} / 20 chars minimum — keep going</p>
+                <p className="text-xs text-red-500 font-bold">{written.what_went_well.trim().length} / 20 chars minimum, keep going</p>
               ) : (
                 <p className="text-xs text-green-600 font-bold">✓ {written.what_went_well.trim().length} chars</p>
               )}
@@ -501,7 +503,7 @@ export function B2cReviewForm({
               <Label htmlFor="improve" className="text-xs font-black uppercase tracking-wide text-slate-400">What could be better?</Label>
               <Textarea
                 id="improve"
-                placeholder="Any areas to improve — sizing, packaging, delivery delays…"
+                placeholder="Any areas to improve, sizing, packaging, delivery delays…"
                 value={written.what_to_improve}
                 onChange={e => setWritten(prev => ({ ...prev, what_to_improve: e.target.value }))}
                 rows={3}
@@ -577,7 +579,7 @@ export function B2cReviewForm({
           <div className="space-y-6">
             <div className="space-y-4">
               <h2 className="text-lg font-black text-slate-950">Add a photo <span className="text-slate-400 font-normal text-base">(optional)</span></h2>
-              <p className="text-sm text-slate-500">Share a photo of your purchase — it helps others see what they are buying.</p>
+              <p className="text-sm text-slate-500">Share a photo of your purchase, it helps others see what they are buying.</p>
               {photoFile ? (
                 <div className="flex items-center gap-3 rounded-xl border border-[#6d28d9] bg-violet-50 p-4">
                   <div className="flex-1 min-w-0">
@@ -596,7 +598,7 @@ export function B2cReviewForm({
                 <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 p-10 cursor-pointer hover:border-[#6d28d9] hover:bg-violet-50 transition-colors">
                   <Upload className="h-6 w-6 text-slate-400" />
                   <span className="text-sm font-bold text-slate-600">Click to upload product photo</span>
-                  <span className="text-xs text-slate-400">JPG or PNG — max 10 MB</span>
+                  <span className="text-xs text-slate-400">JPG or PNG, max 10 MB</span>
                   <input
                     type="file"
                     accept=".jpg,.jpeg,.png"
@@ -635,7 +637,7 @@ export function B2cReviewForm({
                 <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 p-10 cursor-pointer hover:border-[#6d28d9] hover:bg-violet-50 transition-colors">
                   <Upload className="h-6 w-6 text-slate-400" />
                   <span className="text-sm font-bold text-slate-600">Click to upload order confirmation</span>
-                  <span className="text-xs text-slate-400">PDF, JPG, PNG — max 10 MB</span>
+                  <span className="text-xs text-slate-400">PDF, JPG, PNG, max 10 MB</span>
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"

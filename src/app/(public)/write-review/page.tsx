@@ -124,7 +124,7 @@ export default async function WriteReviewPage({ searchParams }: Props) {
           <div className="text-center text-slate-400 py-8">
             <p className="text-4xl mb-4">🔍</p>
             <p className="font-black text-slate-950 text-lg">Start typing a company name above</p>
-            <p className="text-sm mt-2">Search for any Indian B2B company — agency, SaaS, logistics, consulting, and more.</p>
+            <p className="text-sm mt-2">Search for any Indian B2B company, agency, SaaS, logistics, consulting, and more.</p>
           </div>
         )}
       </div>

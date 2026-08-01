@@ -11,7 +11,7 @@ const pontanoSans = Pontano_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Trust Cabbage — B2B Company Reviews for India',
+    default: 'Trust Cabbage, B2B Company Reviews for India',
     template: '%s | Trust Cabbage',
   },
   description: 'Read and write verified reviews for Indian B2B companies. Find trusted agencies, SaaS products, logistics providers, and more.',

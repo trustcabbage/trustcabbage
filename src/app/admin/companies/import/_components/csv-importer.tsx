@@ -28,7 +28,7 @@ function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-')
 }
 
-// Proper RFC-4180 CSV field parser — handles quoted fields with commas and escaped quotes inside
+// Proper RFC-4180 CSV field parser, handles quoted fields with commas and escaped quotes inside
 function parseCSVLine(line: string): string[] {
   const fields: string[] = []
   let i = 0
@@ -149,7 +149,7 @@ export function CsvImporter({ categories }: { categories: Category[] }) {
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-        <h2 className="text-base font-black text-slate-950">Step 2 — Upload your CSV</h2>
+        <h2 className="text-base font-black text-slate-950">Step 2, Upload your CSV</h2>
         <label className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 p-10 cursor-pointer hover:border-[#6d28d9] hover:bg-violet-50 transition-colors">
           <Upload className="h-6 w-6 text-slate-400" />
           <span className="text-sm font-bold text-slate-600">Click to upload CSV file</span>
@@ -161,7 +161,7 @@ export function CsvImporter({ categories }: { categories: Category[] }) {
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden space-y-0">
           <div className="flex items-center justify-between p-5 border-b border-slate-200">
             <div>
-              <h2 className="text-base font-black text-slate-950">Step 3 — Preview & confirm</h2>
+              <h2 className="text-base font-black text-slate-950">Step 3, Preview & confirm</h2>
               <div className="flex items-center gap-4 mt-1 text-xs">
                 <span className="flex items-center gap-1 text-green-700 font-bold"><CheckCircle className="h-3.5 w-3.5" /> {okCount} ready</span>
                 <span className="flex items-center gap-1 text-amber-700 font-bold"><AlertCircle className="h-3.5 w-3.5" /> {dupCount} duplicate</span>

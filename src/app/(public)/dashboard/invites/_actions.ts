@@ -4,45 +4,12 @@ import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { emailInviteLimit } from '@/lib/plan-limits'
+import { buildCompanyInviteEmail } from '@/lib/email-templates'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export type InviteResult = { email: string; status: 'sent' | 'failed'; error?: string }
 export type InviteState = { results?: InviteResult[]; limitError?: string } | undefined
-
-function buildInviteEmail(companyName: string, inviteUrl: string): string {
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;margin:0;padding:24px 0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;">
-    <tr><td>
-      <div style="background:#1e1b4b;border-radius:16px 16px 0 0;padding:28px 32px;">
-        <p style="margin:0;color:#a78bfa;font-weight:900;font-size:18px;letter-spacing:-0.5px;">
-          Trust <span style="color:#fff;">Cabbage</span>
-        </p>
-      </div>
-      <div style="background:#fff;padding:32px;border-radius:0 0 16px 16px;border:1px solid #e2e8f0;border-top:none;">
-        <h1 style="margin:0 0 12px;font-size:22px;font-weight:900;color:#0f172a;line-height:1.2;">
-          Share your experience with ${companyName}
-        </h1>
-        <p style="margin:0 0 24px;color:#64748b;font-size:15px;line-height:1.6;">
-          You've been invited to leave an honest review for <strong>${companyName}</strong> on Trust Cabbage — India's verified B2B review platform. It takes about 3 minutes.
-        </p>
-        <a href="${inviteUrl}" style="display:inline-block;background:#6d28d9;color:#fff;font-weight:900;font-size:15px;padding:14px 28px;border-radius:12px;text-decoration:none;">
-          Write my review →
-        </a>
-        <hr style="border:none;border-top:1px solid #f1f5f9;margin:28px 0;">
-        <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.5;">
-          You received this because ${companyName} invited you to share your feedback on Trust Cabbage.
-          Reviews are permanent and publicly visible. If you did not work with this company, you can ignore this email.
-        </p>
-      </div>
-    </td></tr>
-  </table>
-</body>
-</html>`
-}
 
 async function getCompanyAdmin() {
   const supabase = await createClient()
@@ -102,8 +69,8 @@ export async function sendInvites(_prev: InviteState, formData: FormData): Promi
       const { data, error } = await resend.emails.send({
         from: fromAddress,
         to: [email],
-        subject: `Share your experience with ${coName} — leave a review`,
-        html: buildInviteEmail(coName, inviteUrl),
+        subject: `Share your experience with ${coName}, leave a review`,
+        html: buildCompanyInviteEmail(coName, inviteUrl),
       })
 
       if (error) {

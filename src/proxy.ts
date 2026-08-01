@@ -12,7 +12,7 @@ const BLOCKED_BOTS = [
 
 const isBlockedBot = (ua: string) => BLOCKED_BOTS.some(b => ua.toLowerCase().includes(b))
 
-// ── Layer 4: Rate limiter (module-level — reused across warm instances) ───────
+// ── Layer 4: Rate limiter (module-level, reused across warm instances) ───────
 const ratelimit =
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
     ? new Ratelimit({
@@ -28,12 +28,12 @@ const ratelimit =
 export async function proxy(request: NextRequest) {
   const ua = request.headers.get('user-agent') ?? ''
 
-  // Layer 2 — block known scrapers before anything runs
+  // Layer 2, block known scrapers before anything runs
   if (isBlockedBot(ua)) {
     return new NextResponse('Forbidden', { status: 403 })
   }
 
-  // Layer 4 — rate limiting (skip Next.js prefetches to avoid false positives)
+  // Layer 4, rate limiting (skip Next.js prefetches to avoid false positives)
   if (ratelimit && request.headers.get('Next-Router-Prefetch') !== '1') {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
     try {
@@ -45,11 +45,21 @@ export async function proxy(request: NextRequest) {
         })
       }
     } catch {
-      // Fail open — Redis unavailable, let request through
+      // Fail open, Redis unavailable, let request through
     }
   }
 
-  // Supabase session refresh + auth redirects
+  // Supabase session check, only needed on auth-gated routes. Every other
+  // route (the vast majority of traffic, including link prefetches) skips
+  // this network round-trip entirely, which was adding real latency to
+  // every navigation and prefetch site-wide.
+  const { pathname } = request.nextUrl
+  const isGated = pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
+
+  if (!isGated) {
+    return NextResponse.next({ request })
+  }
+
   try {
     let supabaseResponse = NextResponse.next({ request })
 
@@ -74,13 +84,7 @@ export async function proxy(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    const { pathname } = request.nextUrl
-
-    if (pathname.startsWith('/dashboard') && !user) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-
-    if (pathname.startsWith('/admin') && !user) {
+    if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 

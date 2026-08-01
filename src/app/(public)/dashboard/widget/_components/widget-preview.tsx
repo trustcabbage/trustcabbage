@@ -56,7 +56,7 @@ export function WidgetPreview({ companyName, slug, rating, totalReviews, snippet
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
-        <p className="text-[10px] text-slate-400 mt-2">Live preview — the actual badge on your website will link to your Trust Cabbage page.</p>
+        <p className="text-[10px] text-slate-400 mt-2">Live preview, the actual badge on your website will link to your Trust Cabbage page.</p>
       </div>
 
       {/* Snippet */}

@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data } = await supabase.from('companies').select('name').eq('slug', slug).maybeSingle()
   if (!data) return {}
   return {
-    title: `Review ${(data as any).name} — Trust Cabbage`,
+    title: `Review ${(data as any).name} | Trust Cabbage`,
     description: `Share your experience with ${(data as any).name}. Help other businesses make better decisions.`,
   }
 }

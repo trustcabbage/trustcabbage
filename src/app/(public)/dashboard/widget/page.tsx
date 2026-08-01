@@ -3,9 +3,10 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { WidgetPreview } from './_components/widget-preview'
-import { ChevronLeft, Code2 } from 'lucide-react'
+import { CopySnippet } from './_components/copy-snippet'
+import { ChevronLeft, Code2, Package } from 'lucide-react'
 
-export const metadata: Metadata = { title: 'Website widget — Dashboard' }
+export const metadata: Metadata = { title: 'Website widget, Dashboard' }
 
 export default async function WidgetPage() {
   const supabase = await createClient()
@@ -34,6 +35,20 @@ export default async function WidgetPage() {
   const snippet = `<!-- Trust Cabbage widget -->
 <script src="${snippetSrc}" async></script>`
 
+  const productWidgetSrc = `${siteUrl}/api/widget/product/${company.slug}.js`
+  const collectSnippet = `<!-- On your order confirmation page -->
+<script
+  src="${productWidgetSrc}"
+  data-product-id="YOUR-SKU-123"
+  data-mode="collect"
+></script>`
+  const displaySnippet = `<!-- On your product page -->
+<script
+  src="${productWidgetSrc}"
+  data-product-id="YOUR-SKU-123"
+  data-mode="display"
+></script>`
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4">
@@ -56,7 +71,7 @@ export default async function WidgetPage() {
           </div>
           <div className="px-6 py-6">
             <p className="text-sm text-slate-600 mb-6 leading-relaxed">
-              Add a Trust Cabbage rating badge to your website. It auto-updates as new reviews come in — no code changes needed.
+              Add a Trust Cabbage rating badge to your website. It auto-updates as new reviews come in, no code changes needed.
             </p>
             <WidgetPreview
               companyName={company.name}
@@ -89,6 +104,45 @@ export default async function WidgetPage() {
               </li>
             ))}
           </ol>
+        </div>
+
+        {/* Product-level widget */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-2">
+            <Package className="h-4 w-4 text-[#6d28d9]" />
+            <h2 className="font-black text-slate-950">Product widget</h2>
+            <span className="ml-auto rounded-full bg-violet-100 text-violet-700 border border-violet-200 px-2.5 py-0.5 text-[10px] font-black">
+              Early access
+            </span>
+          </div>
+          <div className="px-6 py-6 space-y-6">
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Collect and display reviews for a specific product, right on your own site. Use your
+              own SKU or product ID in <code className="font-mono text-xs bg-slate-100 rounded px-1.5 py-0.5">data-product-id</code>.
+              The product must be registered first via one{' '}
+              <code className="font-mono text-xs bg-slate-100 rounded px-1.5 py-0.5">POST /api/review-invite</code> call
+              for that SKU, see the{' '}
+              <Link href="/dashboard/api" className="text-[#6d28d9] font-bold hover:underline">API page</Link>.
+            </p>
+
+            <div className="space-y-2">
+              <p className="text-xs font-black uppercase tracking-wide text-slate-400">1. Collect, on your order confirmation page</p>
+              <CopySnippet code={collectSnippet} />
+              <p className="text-xs text-slate-400">Renders an inline review form right there. Reviews are tied to that exact product.</p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-black uppercase tracking-wide text-slate-400">2. Display, on your product page</p>
+              <CopySnippet code={displaySnippet} />
+              <p className="text-xs text-slate-400">Shows the product's rating, recent review excerpts, and any Q&amp;A, pulled live from Trust Cabbage.</p>
+            </div>
+
+            <p className="text-xs text-slate-400 border-t border-slate-100 pt-4">
+              Same <code className="font-mono bg-slate-100 rounded px-1 py-0.5">data-product-id</code> in both snippets links the two together.
+              Full technical reference on the{' '}
+              <Link href="/dashboard/api" className="text-[#6d28d9] font-bold hover:underline">API page</Link>.
+            </p>
+          </div>
         </div>
 
       </div>
