@@ -1,7 +1,8 @@
 ﻿import type { Metadata } from 'next'
 import Link from 'next/link'
+import { unstable_cache } from 'next/cache'
 import { Search, Star, Handshake, ShieldCheck, TrendingUp, Globe, ArrowRight } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { StarRating } from '@/components/reviews/star-rating'
 import { HomeSearch } from '@/components/layout/home-search'
 
@@ -46,24 +47,36 @@ function formatCount(n: number, fallback: string): string {
   return fallback
 }
 
-export default async function HomePage() {
-  const supabase = await createClient()
+// Public, viewer-independent homepage data. Cached 2 minutes — the homepage
+// is the highest-traffic page on the site and every field here is either
+// admin-managed (categories, is_featured) or fine to be a couple minutes
+// stale (recent reviews, counts).
+const getHomepageData = unstable_cache(
+  async () => {
+    const supabase = createPublicClient()
+    const [
+      { data: categoriesRaw },
+      { data: featuredRaw },
+      { data: recentRaw },
+      { count: companyCount },
+      { count: reviewCount },
+      { count: categoryCount },
+    ] = await Promise.all([
+      supabase.from('categories').select('id, name, slug, icon, platform_type').eq('is_active', true).is('parent_id', null).order('sort_order').limit(30),
+      supabase.from('companies').select('id, name, slug, logo_url, average_rating, total_reviews, city, state, is_verified, is_featured, business_type').eq('is_featured', true).order('total_reviews', { ascending: false }).limit(8),
+      supabase.from('reviews').select('id, rating_overall, what_went_well, created_at, is_anonymous, is_verified_buyer, companies(name, slug, city), users(display_name)').eq('status', 'published').order('created_at', { ascending: false }).limit(6),
+      supabase.from('companies').select('*', { count: 'exact', head: true }),
+      supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+      supabase.from('categories').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    ])
+    return { categoriesRaw, featuredRaw, recentRaw, companyCount, reviewCount, categoryCount }
+  },
+  ['homepage-data'],
+  { revalidate: 120 }
+)
 
-  const [
-    { data: categoriesRaw },
-    { data: featuredRaw },
-    { data: recentRaw },
-    { count: companyCount },
-    { count: reviewCount },
-    { count: categoryCount },
-  ] = await Promise.all([
-    supabase.from('categories').select('id, name, slug, icon, platform_type').eq('is_active', true).is('parent_id', null).order('sort_order').limit(30),
-    supabase.from('companies').select('id, name, slug, logo_url, average_rating, total_reviews, city, state, is_verified, is_featured, business_type').eq('is_featured', true).order('total_reviews', { ascending: false }).limit(8),
-    supabase.from('reviews').select('id, rating_overall, what_went_well, created_at, is_anonymous, is_verified_buyer, companies(name, slug, city), users(display_name)').eq('status', 'published').order('created_at', { ascending: false }).limit(6),
-    supabase.from('companies').select('*', { count: 'exact', head: true }),
-    supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('status', 'published'),
-    supabase.from('categories').select('*', { count: 'exact', head: true }).eq('is_active', true),
-  ])
+export default async function HomePage() {
+  const { categoriesRaw, featuredRaw, recentRaw, companyCount, reviewCount, categoryCount } = await getHomepageData()
 
   const allCats = (categoriesRaw ?? []) as CategoryRow[]
   const b2bCats = allCats.filter(c => c.platform_type === 'b2b' || c.platform_type === 'both').slice(0, 12)

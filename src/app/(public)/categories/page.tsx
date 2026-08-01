@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { unstable_cache } from 'next/cache'
+import { createPublicClient } from '@/lib/supabase/public'
 
 export const metadata: Metadata = { title: 'Browse categories | Trust Cabbage' }
 
@@ -21,21 +22,29 @@ function stripMd(text: string): string {
     .trim()
 }
 
+// Public, viewer-independent, admin-managed data — safe to cache for a while.
+const getCategoriesByTab = unstable_cache(
+  async (platformTypes: string[]) => {
+    const supabase = createPublicClient()
+    const { data } = await supabase
+      .from('categories')
+      .select('id, name, slug, icon, description')
+      .eq('is_active', true)
+      .is('parent_id', null)
+      .in('platform_type', platformTypes)
+      .order('sort_order')
+    return (data as unknown as CategoryRow[]) ?? []
+  },
+  ['categories-by-tab'],
+  { revalidate: 300 }
+)
+
 export default async function CategoriesPage({ searchParams }: Props) {
   const { tab = 'b2b' } = await searchParams
   const isB2c = tab === 'b2c'
   const platformTypes = isB2c ? ['b2c', 'both'] : ['b2b', 'both']
 
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('categories')
-    .select('id, name, slug, icon, description')
-    .eq('is_active', true)
-    .is('parent_id', null)
-    .in('platform_type', platformTypes)
-    .order('sort_order')
-
-  const categories = (data as unknown as CategoryRow[]) ?? []
+  const categories = await getCategoriesByTab(platformTypes)
 
   return (
     <div>
