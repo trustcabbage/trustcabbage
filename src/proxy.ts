@@ -1,4 +1,3 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
@@ -49,49 +48,14 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Supabase session check, only needed on auth-gated routes. Every other
-  // route (the vast majority of traffic, including link prefetches) skips
-  // this network round-trip entirely, which was adding real latency to
-  // every navigation and prefetch site-wide.
-  const { pathname } = request.nextUrl
-  const isGated = pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
-
-  if (!isGated) {
-    return NextResponse.next({ request })
-  }
-
-  try {
-    let supabaseResponse = NextResponse.next({ request })
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-            supabaseResponse = NextResponse.next({ request })
-            cookiesToSet.forEach(({ name, value, options }) =>
-              supabaseResponse.cookies.set(name, value, options)
-            )
-          },
-        },
-      }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-
-    return supabaseResponse
-  } catch {
-    return NextResponse.next({ request })
-  }
+  // No Supabase auth check here. Every /dashboard/* page and admin/layout.tsx
+  // already does its own auth (+ role, for admin) check and redirect as the
+  // first thing it does, before any data fetch — real data protection is
+  // Supabase RLS at the database layer regardless. A middleware-level check
+  // here was pure duplication (every gated navigation paid for the auth
+  // round-trip twice) and, worse, blocked the initial response stream so
+  // loading.tsx could never show for these routes specifically.
+  return NextResponse.next({ request })
 }
 
 export const config = {
