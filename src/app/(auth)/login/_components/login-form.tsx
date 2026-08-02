@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,7 +17,18 @@ function authErrorMessage(message: string | undefined): string {
   return trimmed
 }
 
-export function LoginForm({ next = '/' }: { next?: string }) {
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z" />
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z" />
+      <path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33z" />
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z" />
+    </svg>
+  )
+}
+
+export function LoginForm({ next = '/', isEmbed = false, oauthError }: { next?: string; isEmbed?: boolean; oauthError?: string }) {
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [step, setStep] = useState<'email' | 'otp'>('email')
@@ -25,6 +36,24 @@ export function LoginForm({ next = '/' }: { next?: string }) {
   const [resendCooldown, setResendCooldown] = useState(0)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    if (oauthError) toast.error(authErrorMessage(oauthError))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function signInWithGoogle() {
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
+    })
+    // On success the browser is already navigating to Google, nothing to do.
+    // Only reachable on failure (e.g. provider misconfigured).
+    if (error) { setLoading(false); toast.error(authErrorMessage(error.message)) }
+  }
 
   async function sendOtp() {
     setLoading(true)
@@ -73,12 +102,41 @@ export function LoginForm({ next = '/' }: { next?: string }) {
     const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' })
     setLoading(false)
     if (error) { toast.error('Invalid or expired code. Try again.'); return }
+
+    // Embedded in an iframe (e.g. the "write a review" auth popup): tell the
+    // parent window we're signed in instead of navigating inside the frame,
+    // the parent does a full navigation to `next` for the now-authenticated user.
+    if (isEmbed && window.parent !== window) {
+      window.parent.postMessage({ type: 'tc-login-success', next }, '*')
+      return
+    }
+
     router.push(next)
     router.refresh()
   }
 
   return (
     <div className="rounded-xl bg-white/5 border border-white/10 p-6 backdrop-blur">
+      {/* Google can't render its consent screen inside an iframe (it blocks
+          this deliberately), so this is only offered on the full-page login,
+          never inside the write-review popup. */}
+      {step === 'email' && !isEmbed && (
+        <>
+          <button
+            type="button"
+            onClick={signInWithGoogle}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-white hover:bg-slate-100 disabled:opacity-60 text-slate-800 font-bold py-3 text-sm transition-colors"
+          >
+            <GoogleIcon /> Continue with Google
+          </button>
+          <div className="flex items-center gap-3 my-4">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-xs text-slate-500 font-bold">OR</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+        </>
+      )}
       <form onSubmit={(e) => { e.preventDefault(); step === 'email' ? sendOtp() : verifyOtp() }} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="email" className="text-slate-300 text-sm font-bold">Email address</Label>

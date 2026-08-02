@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StarRating } from '@/components/reviews/star-rating'
+import { VerifiedBadge } from '@/components/verified-badge'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -95,7 +96,7 @@ export default async function TagPage({ params }: Props) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-black text-slate-950">{company.name}</p>
                     {company.is_verified && (
-                      <span className="rounded-full bg-violet-50 px-2 py-0.5 text-xs font-bold text-[#6d28d9]">Verified</span>
+                      <VerifiedBadge />
                     )}
                   </div>
                   {(company.city || company.state) && (

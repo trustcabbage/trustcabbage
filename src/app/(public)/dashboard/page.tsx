@@ -2,7 +2,8 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { StarRating } from '@/components/reviews/star-rating'
-import { CheckCircle, AlertCircle, ExternalLink, Mail, ArrowRight, Code2, QrCode, Settings, BarChart2, Star, Terminal } from 'lucide-react'
+import { VerifiedBadge } from '@/components/verified-badge'
+import { CheckCircle, AlertCircle, ExternalLink, Mail, ArrowRight, Code2, QrCode, Settings, BarChart2, Star, Terminal, MessageCircleQuestion } from 'lucide-react'
 import { ShareTools } from './_components/share-tools'
 
 export default async function DashboardPage() {
@@ -87,11 +88,7 @@ export default async function DashboardPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-black text-slate-950 text-sm">{co.name}</span>
-                {co.is_verified && (
-                  <span className="flex items-center gap-1 rounded-full bg-violet-100 text-violet-700 border border-violet-200 px-2 py-0.5 text-[10px] font-black">
-                    <CheckCircle className="h-3 w-3" /> Verified
-                  </span>
-                )}
+                {co.is_verified && <VerifiedBadge />}
                 <span className="rounded-full bg-green-100 text-green-700 px-2 py-0.5 text-[10px] font-black">Claimed</span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">{[co.city, co.state].filter(Boolean).join(', ') || 'Location not set'}</p>
@@ -124,7 +121,7 @@ export default async function DashboardPage() {
         {/* Unanswered product questions */}
         {unansweredCount > 0 && (
           <Link
-            href={`/company/${co.slug}?tab=products`}
+            href="/dashboard/qa"
             className="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-5 py-4 hover:bg-amber-100/60 transition-colors"
           >
             <div className="h-9 w-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
@@ -350,6 +347,16 @@ export default async function DashboardPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-black text-slate-700">Product Reviews API</p>
                     <p className="text-[10px] text-slate-400">Collect reviews per product, via API or widget</p>
+                  </div>
+                  <ArrowRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                </Link>
+                <Link href="/dashboard/qa" className="flex items-center gap-3 hover:bg-slate-50 rounded-xl px-1 py-1 -mx-1 transition-colors">
+                  <div className="h-7 w-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <MessageCircleQuestion className="h-3.5 w-3.5 text-amber-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-slate-700">Q&amp;A inbox</p>
+                    <p className="text-[10px] text-slate-400">Answer questions across all your products</p>
                   </div>
                   <ArrowRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
                 </Link>

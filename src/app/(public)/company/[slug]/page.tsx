@@ -5,6 +5,8 @@ import { MapPin, Globe, Users, Calendar, CheckCircle, ArrowRight } from 'lucide-
 import { createClient } from '@/lib/supabase/server'
 import { CategoryChips } from './_components/category-chip-modal'
 import { StarRating } from '@/components/reviews/star-rating'
+import { VerifiedBadge } from '@/components/verified-badge'
+import { WriteReviewCta } from './_components/write-review-cta'
 import { ReviewCard } from './_components/review-card'
 import { RatingBreakdown } from './_components/rating-breakdown'
 
@@ -348,11 +350,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">{company.name}</h1>
-                {company.is_verified && (
-                  <span className="flex items-center gap-1 rounded-full bg-violet-100 text-violet-700 border border-violet-200 px-2.5 py-0.5 text-xs font-black">
-                    <CheckCircle className="h-3 w-3" /> Verified
-                  </span>
-                )}
+                {company.is_verified && <VerifiedBadge size="lg" />}
                 {company.business_models && (
                   <span className="rounded-full bg-purple-100 text-purple-700 border border-purple-200 px-2.5 py-0.5 text-xs font-bold">
                     {company.business_models.name}
@@ -568,12 +566,13 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                     <h2 className="text-xl font-black text-slate-950">
                       {activeTab === 'reviews' ? 'All Reviews' : 'Reviews'}
                     </h2>
-                    <Link
+                    <WriteReviewCta
                       href={`/company/${slug}/write-review`}
+                      isLoggedIn={!!user}
                       className="rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-5 py-2.5 text-sm transition-colors"
                     >
                       Write a review
-                    </Link>
+                    </WriteReviewCta>
                   </div>
 
                   {/* Review filters */}
@@ -639,10 +638,10 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                           : <>Be the first to review {company.name}</>}
                       </p>
                       {!activeTag && (
-                        <Link href={`/company/${slug}/write-review`}
+                        <WriteReviewCta href={`/company/${slug}/write-review`} isLoggedIn={!!user}
                           className="inline-block mt-5 rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-6 py-2.5 text-sm transition-colors">
                           Write a review
-                        </Link>
+                        </WriteReviewCta>
                       )}
                     </div>
                   ) : (
@@ -677,12 +676,13 @@ export default async function CompanyPage({ params, searchParams }: Props) {
 
           {/* ── Sidebar ── */}
           <div className="space-y-5">
-            <Link
+            <WriteReviewCta
               href={`/company/${slug}/write-review`}
+              isLoggedIn={!!user}
               className="block w-full rounded-xl bg-[#6d28d9] hover:bg-[#7c3aed] text-white font-black px-5 py-3 text-sm transition-colors text-center"
             >
               Write a review
-            </Link>
+            </WriteReviewCta>
 
             {/* Company details, all tabs except About (shown in main on About) */}
             {activeTab !== 'about' && (

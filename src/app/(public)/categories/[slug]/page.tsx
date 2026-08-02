@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { StarRating } from '@/components/reviews/star-rating'
+import { VerifiedBadge } from '@/components/verified-badge'
 import { ExpandableDescription } from './_components/expandable-description'
 
 type Props = {
@@ -468,7 +469,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-black text-slate-950 group-hover:text-[#6d28d9] transition-colors text-sm truncate">{company.name}</p>
                           {company.is_featured && <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-black text-amber-700 flex-shrink-0">⭐ Featured</span>}
-                          {company.is_verified && <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-black text-violet-700 flex-shrink-0">Verified</span>}
+                          {company.is_verified && <VerifiedBadge />}
                           {company.business_models && <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-black text-purple-700 flex-shrink-0">{company.business_models.name}</span>}
                           {company.business_type === 'retail_chain' && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700 flex-shrink-0">🏪 Has stores</span>}
                           {company.business_type === 'both' && <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-black text-purple-700 flex-shrink-0">✦ B2B + B2C</span>}

@@ -160,14 +160,18 @@ export function CompanyForm({ categories, businessModels, mode, initialData }: C
       business_type: businessType || 'business_services',
       is_featured: isFeatured,
       is_verified: isVerified,
-      status: 'unclaimed',
-      created_by_admin: true,
     }
 
     let companyId: string
 
     if (mode === 'create') {
-      const { data, error } = await supabase.from('companies').insert(payload).select('id, slug').single()
+      // status and created_by_admin only make sense as initial values for a
+      // brand-new admin-seeded company, never on update, see below.
+      const { data, error } = await supabase.from('companies').insert({
+        ...payload,
+        status: 'unclaimed',
+        created_by_admin: true,
+      }).select('id, slug').single()
       if (error || !data) { toast.error('Failed to create company: ' + error?.message); setSaving(false); return }
       companyId = data.id
 
@@ -175,6 +179,10 @@ export function CompanyForm({ categories, businessModels, mode, initialData }: C
         selectedCategories.map(cid => ({ company_id: companyId, category_id: cid }))
       )
     } else {
+      // Never touch status or created_by_admin here, this company may have
+      // been self-registered and/or legitimately claimed since creation.
+      // Overwriting them on every edit was silently reverting claimed
+      // companies back to unclaimed and mislabeling them as admin-seeded.
       const { error } = await supabase.from('companies').update(payload).eq('id', initialData.id)
       if (error) { toast.error('Failed to update company: ' + error.message); setSaving(false); return }
       companyId = initialData.id

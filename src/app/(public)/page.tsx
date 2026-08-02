@@ -5,6 +5,7 @@ import { Search, Star, Handshake, ShieldCheck, TrendingUp, Globe, ArrowRight } f
 import { createPublicClient } from '@/lib/supabase/public'
 import { StarRating } from '@/components/reviews/star-rating'
 import { HomeSearch } from '@/components/layout/home-search'
+import { VerifiedBadge } from '@/components/verified-badge'
 
 export const metadata: Metadata = {
   title: 'Trust Cabbage, Find Companies & Brands You Can Actually Trust',
@@ -324,7 +325,7 @@ export default async function HomePage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-black text-slate-950 text-sm truncate">{company.name}</p>
-                      {company.is_verified && <span className="rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-[#6d28d9] flex-shrink-0">✓</span>}
+                      {company.is_verified && <VerifiedBadge />}
                       {company.business_type === 'both' && <span className="rounded-full bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold text-purple-700 flex-shrink-0">✦ B2B + B2C</span>}
                     </div>
                     <div className="flex items-center gap-1 mt-0.5">
@@ -369,7 +370,7 @@ export default async function HomePage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-black text-slate-950 text-sm truncate">{company.name}</p>
-                      {company.is_verified && <span className="rounded-full bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-[#6d28d9] flex-shrink-0">✓</span>}
+                      {company.is_verified && <VerifiedBadge />}
                       {company.business_type === 'retail_chain' && <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 flex-shrink-0">🏪 Has stores</span>}
                       {company.business_type === 'both' && <span className="rounded-full bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold text-purple-700 flex-shrink-0">✦ B2B + B2C</span>}
                     </div>

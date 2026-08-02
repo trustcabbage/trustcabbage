@@ -75,5 +75,7 @@ export async function answerQuestion(_prev: QaState, formData: FormData): Promis
   if (error) return { error: 'Could not post your answer. Please try again.' }
 
   revalidatePath(`/company/${companySlug}/product/${productSlug}`)
+  // Also invalidate the dashboard Q&A inbox, this action is reused there too.
+  revalidatePath('/dashboard/qa')
   return { success: true }
 }

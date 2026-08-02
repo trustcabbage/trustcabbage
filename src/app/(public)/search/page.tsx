@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { StarRating } from '@/components/reviews/star-rating'
+import { VerifiedBadge } from '@/components/verified-badge'
 import { SearchInput } from './_components/search-input'
 
 type Props = {
@@ -406,9 +407,7 @@ export default async function SearchPage({ searchParams }: Props) {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-black text-slate-950">{company.name}</p>
-                        {company.is_verified && (
-                          <span className="rounded-full bg-violet-50 px-2 py-0.5 text-xs font-bold text-[#6d28d9]">Verified</span>
-                        )}
+                        {company.is_verified && <VerifiedBadge />}
                         {company.matchedTag && (
                           <span className="rounded-full bg-[#6d28d9]/10 border border-[#6d28d9]/20 px-2 py-0.5 text-xs font-bold text-[#6d28d9]">
                             #{company.matchedTag}

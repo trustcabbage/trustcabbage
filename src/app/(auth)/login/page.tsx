@@ -4,7 +4,7 @@ import { LoginForm } from './_components/login-form'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Sign in' }
 
-type Props = { searchParams: Promise<{ next?: string }> }
+type Props = { searchParams: Promise<{ next?: string; embed?: string; error?: string }> }
 
 function getLoginContext(next?: string): { title: string; subtitle: string } {
   if (!next) return { title: 'Sign in', subtitle: "We'll send a one-time code to your email." }
@@ -21,7 +21,8 @@ function getLoginContext(next?: string): { title: string; subtitle: string } {
 }
 
 export default async function LoginPage({ searchParams }: Props) {
-  const { next } = await searchParams
+  const { next, embed, error } = await searchParams
+  const isEmbed = embed === '1'
   const { title, subtitle } = getLoginContext(next)
   return (
     <div className="w-full max-w-md">
@@ -32,7 +33,7 @@ export default async function LoginPage({ searchParams }: Props) {
         <h1 className="text-2xl font-black text-white mt-4">{title}</h1>
         <p className="mt-2 text-sm text-slate-400">{subtitle}</p>
       </div>
-      <LoginForm next={next ?? '/'} />
+      <LoginForm next={next ?? '/'} isEmbed={isEmbed} oauthError={error} />
     </div>
   )
 }
