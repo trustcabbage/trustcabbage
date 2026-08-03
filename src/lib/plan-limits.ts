@@ -12,18 +12,21 @@ export const PLAN_LIMITS = {
     bulkCsvInvite: false,
     widgetWatermark: true,
     qrCodeDownload: false,
+    serviceRequestsPerMonth: 20,
   },
   starter: {
     emailInvitesPerMonth: 100,
     bulkCsvInvite: false,
     widgetWatermark: false,
     qrCodeDownload: false,
+    serviceRequestsPerMonth: 200,
   },
   growth: {
     emailInvitesPerMonth: Infinity,
     bulkCsvInvite: true,
     widgetWatermark: false,
     qrCodeDownload: true,
+    serviceRequestsPerMonth: Infinity,
   },
 } as const
 
@@ -42,4 +45,10 @@ export function canUseFeature(
 export function emailInviteLimit(plan: Plan): number {
   if (EARLY_ACCESS) return Infinity
   return PLAN_LIMITS[plan].emailInvitesPerMonth
+}
+
+// Monthly Service Desk request limit (Infinity = unlimited).
+export function serviceRequestLimit(plan: Plan): number {
+  if (EARLY_ACCESS) return Infinity
+  return PLAN_LIMITS[plan].serviceRequestsPerMonth
 }

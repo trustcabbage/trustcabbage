@@ -1,5 +1,5 @@
 import { createHash } from 'crypto'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 
 type Company = {
   id: string
@@ -12,9 +12,11 @@ type Company = {
 
 type AuthResult =
   | { ok: false; error: string }
-  | { ok: true; company: Company; supabase: Awaited<ReturnType<typeof createServiceClient>> }
+  | { ok: true; company: Company; supabase: ReturnType<typeof createAdminClient> }
 
 // Shared Bearer tc_live_ auth for all /api/* endpoints that accept a company's API key.
+// Uses the cookie-free admin client so writes always run as the service role,
+// even if the call arrives from a browser session with auth cookies attached.
 export async function authenticateApiKey(req: Request): Promise<AuthResult> {
   const auth = req.headers.get('authorization') ?? ''
   const key = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
@@ -23,7 +25,7 @@ export async function authenticateApiKey(req: Request): Promise<AuthResult> {
   }
 
   const keyHash = createHash('sha256').update(key).digest('hex')
-  const supabase = await createServiceClient()
+  const supabase = createAdminClient()
 
   const { data } = await supabase
     .from('companies')

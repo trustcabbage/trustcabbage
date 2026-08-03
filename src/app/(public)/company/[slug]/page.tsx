@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/server'
 import { CategoryChips } from './_components/category-chip-modal'
 import { StarRating } from '@/components/reviews/star-rating'
 import { VerifiedBadge } from '@/components/verified-badge'
+import { ServiceBadge, qualifiesForServiceBadge } from '@/components/service-badge'
+import { ServiceTab } from './_components/service-tab'
 import { WriteReviewCta } from './_components/write-review-cta'
 import { ReviewCard } from './_components/review-card'
 import { RatingBreakdown } from './_components/rating-breakdown'
@@ -65,7 +67,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CompanyPage({ params, searchParams }: Props) {
   const { slug } = await params
   const { tag: activeTag = '', already_reviewed, own_company, assoc: activeAssoc = '', sort: reviewSort = 'newest', tab } = await searchParams
-  const activeTab = (tab === 'reviews' || tab === 'products' || tab === 'about') ? tab : 'overview'
+  const activeTab = (tab === 'reviews' || tab === 'products' || tab === 'about' || tab === 'service') ? tab : 'overview'
   const supabase = await createClient()
 
   // Determine if viewer is company admin for this page (needed for reply button)
@@ -235,6 +237,34 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     }
   }
 
+  // Published Service Desk cases. Explicit publish_at filter: RLS would let a
+  // logged-in company admin see their own unpublished complaints here, and the
+  // public page must render identically for everyone.
+  const nowIso = new Date().toISOString()
+  const { data: rawServiceCases } = await supabase
+    .from('service_cases')
+    .select('id, type, category, satisfaction, title, body, status, resolution_summary, customer_display, created_at, resolved_at, first_company_reply_at, products_services(name, slug)')
+    .eq('company_id', company.id)
+    .lte('publish_at', nowIso)
+    .order('created_at', { ascending: false })
+    .limit(50)
+  const serviceCases = (rawServiceCases ?? []) as any[]
+  const serviceComplaints = serviceCases.filter(c => c.type === 'complaint')
+  const serviceFeedback = serviceCases.filter(c => c.type === 'feedback')
+  const resolvedComplaints = serviceComplaints.filter(c => c.status === 'resolved')
+  const resolutionDurations = resolvedComplaints
+    .filter(c => c.resolved_at)
+    .map(c => (new Date(c.resolved_at).getTime() - new Date(c.created_at).getTime()) / 3600000)
+  const serviceStats = {
+    complaints: serviceComplaints.length,
+    resolved: resolvedComplaints.length,
+    open: serviceComplaints.filter(c => c.status === 'open' || c.status === 'resolution_offered').length,
+    avgResolutionHours: resolutionDurations.length > 0
+      ? Math.round(resolutionDurations.reduce((a, b) => a + b, 0) / resolutionDurations.length)
+      : null,
+  }
+  const hasServiceBadge = qualifiesForServiceBadge(serviceStats)
+
   const schemaOrg = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -351,6 +381,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">{company.name}</h1>
                 {company.is_verified && <VerifiedBadge size="lg" />}
+                {hasServiceBadge && <ServiceBadge />}
                 {company.business_models && (
                   <span className="rounded-full bg-purple-100 text-purple-700 border border-purple-200 px-2.5 py-0.5 text-xs font-bold">
                     {company.business_models.name}
@@ -385,6 +416,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               { id: 'overview', label: 'Overview' },
               { id: 'reviews', label: `Reviews${company.total_reviews > 0 ? ` (${company.total_reviews})` : ''}` },
               { id: 'products', label: 'Products & Services' },
+              ...(serviceCases.length > 0 ? [{ id: 'service', label: `Service (${serviceCases.length})` }] : []),
               { id: 'about', label: 'About' },
             ].map(t => (
               <Link
@@ -409,7 +441,14 @@ export default async function CompanyPage({ params, searchParams }: Props) {
           {/* ── Main column ── */}
           <div className="lg:col-span-2 space-y-8">
 
-            {activeTab === 'products' ? (
+            {activeTab === 'service' ? (
+              <ServiceTab
+                companyName={company.name}
+                companySlug={slug}
+                cases={serviceCases}
+                stats={serviceStats}
+              />
+            ) : activeTab === 'products' ? (
               /* Products & Services tab */
               <>
                 {activeProducts.length > 0 ? (

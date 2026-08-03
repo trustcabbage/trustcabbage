@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
   const productId = String(body?.product_id ?? '').trim()
   const productName = String(body?.product_name ?? '').trim()
   const orderId = body?.order_id ? String(body.order_id).trim() : null
+  const customerName = body?.customer_name ? String(body.customer_name).trim() || null : null
 
   if (customerEmail && !EMAIL_RE.test(customerEmail)) {
     return json(400, { error: 'customer_email must be a valid email if provided.' })
@@ -138,6 +139,37 @@ export async function POST(req: NextRequest) {
     })
   }
 
+  // ── Service Desk door (secondary option in the email) ─────────────────────
+  // A per-customer request row so the invite email can also offer "raise an
+  // issue". Re-sends for the same (order, email) reuse the existing token.
+  let serviceUrl: string | undefined
+  {
+    const { data: reqRow, error: reqErr } = await supabase
+      .from('service_requests')
+      .insert({
+        company_id: company.id,
+        product_service_id: productServiceId,
+        customer_email: customerEmail,
+        customer_name: customerName,
+        order_ref: orderId,
+        source: 'api',
+      })
+      .select('token')
+      .single()
+    if (reqRow) {
+      serviceUrl = `${siteUrl}/service/${(reqRow as any).token}`
+    } else if (reqErr?.code === '23505' && orderId) {
+      const { data: existingReq } = await supabase
+        .from('service_requests')
+        .select('token')
+        .eq('company_id', company.id)
+        .eq('order_ref', orderId)
+        .eq('customer_email', customerEmail)
+        .maybeSingle()
+      if (existingReq) serviceUrl = `${siteUrl}/service/${(existingReq as any).token}`
+    }
+  }
+
   // ── Send the invite email ─────────────────────────────────────────────────
   const inviteUrl = `${siteUrl}/review/${company.slug}?ref=${company.invite_token}&src=api&product=${encodeURIComponent(productId)}`
   const fromAddress = process.env.RESEND_FROM_EMAIL ?? 'Trust Cabbage <noreply@trustcabbage.com>'
@@ -147,7 +179,7 @@ export async function POST(req: NextRequest) {
       from: fromAddress,
       to: [customerEmail],
       subject: `How was your ${productDisplayName}? Leave a review`,
-      html: buildProductInviteEmail(company.name, productDisplayName, inviteUrl),
+      html: buildProductInviteEmail(company.name, productDisplayName, inviteUrl, serviceUrl),
     })
 
     if (sendErr) {

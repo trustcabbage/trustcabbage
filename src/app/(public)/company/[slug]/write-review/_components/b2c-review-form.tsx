@@ -156,6 +156,9 @@ export function B2cReviewForm({
       company_id: company.id,
       reviewer_id: userId,
       review_type: 'b2c',
+      // Primary product drives the product rating trigger and the per-product
+      // duplicate check; the junction table below still records all of them.
+      product_service_id: productServiceIds[0] ?? null,
       // B2C purchase context
       purchase_type: purchase.purchase_type as any,
       order_value_range: purchase.order_value_range as any,

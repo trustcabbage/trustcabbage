@@ -138,6 +138,26 @@ export default function AntiFakeCommitmentPage() {
           </div>
         </div>
 
+        {/* Complaints cannot be buried */}
+        <div id="complaints" className="border-t border-slate-200 pt-10">
+          <h2 className="text-lg font-black text-slate-950 mb-5">Complaints Cannot Be Buried</h2>
+          <p className="text-slate-600 text-sm leading-relaxed mb-4">
+            The same commitment extends to post-sales service. When a verified customer raises a complaint through a company&apos;s Service Desk on Trust Cabbage, that complaint appears publicly on the company&apos;s page no later than 72 hours after submission, resolved or not. There is no mechanism, paid or otherwise, for a company to delay, hide, or delete a complaint.
+          </p>
+          <div className="space-y-3 text-sm leading-relaxed">
+            {[
+              { label: 'The 72-hour window is fixed', body: 'Companies get up to 72 hours to respond privately before publication. Resolving in that window does not prevent publication, the complaint still appears, already marked as resolved. If the company has not even replied within 24 hours, the customer can publish immediately.' },
+              { label: 'Only the customer can mark a complaint resolved', body: 'A company can offer a resolution, but the case only closes when the customer confirms it. Companies cannot resolve their own complaints, and a customer\'s refusal is shown publicly.' },
+              { label: 'Threads are permanent', body: 'Neither the company nor the customer can edit or delete a complaint thread once submitted. What was said, and when, stays on the record.' },
+            ].map(({ label, body }) => (
+              <div key={label} className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+                <p className="font-black text-slate-950 text-sm mb-1">{label}</p>
+                <p className="text-slate-600 text-sm leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* What We Cannot Promise */}
         <div id="limitations" className="border-t border-slate-200 pt-10">
           <h2 className="text-lg font-black text-slate-950 mb-5">What We Cannot Promise</h2>

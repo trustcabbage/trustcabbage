@@ -65,12 +65,23 @@ export async function sendInvites(_prev: InviteState, formData: FormData): Promi
 
   for (const email of emails) {
     try {
+      // Every invite also opens a Service Desk door: the review stays the
+      // primary CTA, but the customer always gets the option to raise an
+      // issue instead. The company never controls what a customer may raise.
+      let serviceUrl: string | undefined
+      const { data: reqRow } = await supabase
+        .from('service_requests')
+        .insert({ company_id: companyId, customer_email: email, sent_by: userId, source: 'invite' })
+        .select('token')
+        .single()
+      if (reqRow) serviceUrl = `${siteUrl}/service/${(reqRow as any).token}`
+
       const fromAddress = process.env.RESEND_FROM_EMAIL ?? 'Trust Cabbage <noreply@trustcabbage.com>'
       const { data, error } = await resend.emails.send({
         from: fromAddress,
         to: [email],
         subject: `Share your experience with ${coName}, leave a review`,
-        html: buildCompanyInviteEmail(coName, inviteUrl),
+        html: buildCompanyInviteEmail(coName, inviteUrl, serviceUrl),
       })
 
       if (error) {

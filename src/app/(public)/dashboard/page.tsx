@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { StarRating } from '@/components/reviews/star-rating'
 import { VerifiedBadge } from '@/components/verified-badge'
-import { CheckCircle, AlertCircle, ExternalLink, Mail, ArrowRight, Code2, QrCode, Settings, BarChart2, Star, Terminal, MessageCircleQuestion } from 'lucide-react'
+import { CheckCircle, AlertCircle, ExternalLink, Mail, ArrowRight, Code2, QrCode, Settings, BarChart2, Star, Terminal, MessageCircleQuestion, HeartHandshake } from 'lucide-react'
 import { ShareTools } from './_components/share-tools'
 
 export default async function DashboardPage() {
@@ -21,11 +21,12 @@ export default async function DashboardPage() {
 
   const companyId = (profile as any).company_id
 
-  const [{ data: coRaw }, { data: categoriesRaw }, { data: productsRaw }, { data: recentReviewsRaw }] = await Promise.all([
+  const [{ data: coRaw }, { data: categoriesRaw }, { data: productsRaw }, { data: recentReviewsRaw }, { data: openComplaintsRaw }] = await Promise.all([
     supabase.from('companies').select('*').eq('id', companyId).single(),
     supabase.from('company_categories').select('categories(id, name, slug, parent_id)').eq('company_id', companyId),
     supabase.from('products_services').select('id, name, type, is_active').eq('company_id', companyId).eq('is_active', true).order('sort_order'),
     supabase.from('reviews').select('id, rating_overall, what_went_well, created_at, is_anonymous, users(display_name)').eq('company_id', companyId).eq('status', 'published').order('created_at', { ascending: false }).limit(5),
+    supabase.from('service_cases').select('id, publish_at').eq('company_id', companyId).eq('type', 'complaint').eq('status', 'open'),
   ])
 
   const co = coRaw as any
@@ -39,6 +40,12 @@ export default async function DashboardPage() {
   const categories = ((categoriesRaw ?? []) as any[]).map(r => r.categories).filter(Boolean)
   const products = (productsRaw ?? []) as any[]
   const recentReviews = (recentReviewsRaw ?? []) as any[]
+
+  // Open Service Desk complaints, publication clock running
+  const openComplaints = (openComplaintsRaw ?? []) as any[]
+  const earliestPublishHours = openComplaints.length > 0
+    ? Math.max(0, Math.min(...openComplaints.map(c => Math.round((new Date(c.publish_at).getTime() - Date.now()) / 3600000))))
+    : null
 
   // Unanswered product questions across all of this company's products
   let unansweredCount = 0
@@ -117,6 +124,29 @@ export default async function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Open Service Desk complaints */}
+        {openComplaints.length > 0 && (
+          <Link
+            href="/dashboard/service"
+            className="flex items-center gap-3 rounded-xl bg-rose-50 border border-rose-200 px-5 py-4 hover:bg-rose-100/60 transition-colors"
+          >
+            <div className="h-9 w-9 rounded-lg bg-rose-100 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="h-4.5 w-4.5 text-rose-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black text-rose-900">
+                {openComplaints.length} open complaint{openComplaints.length !== 1 ? 's' : ''} on your Service Desk
+              </p>
+              <p className="text-xs text-rose-700 mt-0.5">
+                {earliestPublishHours !== null && earliestPublishHours > 0
+                  ? `Earliest goes public in ${earliestPublishHours}h. Resolve first and it publishes as resolved.`
+                  : 'Already public. Resolving it still improves your service record.'}
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-rose-600 flex-shrink-0" />
+          </Link>
+        )}
 
         {/* Unanswered product questions */}
         {unansweredCount > 0 && (
@@ -357,6 +387,16 @@ export default async function DashboardPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-black text-slate-700">Q&amp;A inbox</p>
                     <p className="text-[10px] text-slate-400">Answer questions across all your products</p>
+                  </div>
+                  <ArrowRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                </Link>
+                <Link href="/dashboard/service" className="flex items-center gap-3 hover:bg-slate-50 rounded-xl px-1 py-1 -mx-1 transition-colors">
+                  <div className="h-7 w-7 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0">
+                    <HeartHandshake className="h-3.5 w-3.5 text-teal-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-slate-700">Service Desk</p>
+                    <p className="text-[10px] text-slate-400">Collect feedback, resolve complaints in public</p>
                   </div>
                   <ArrowRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
                 </Link>

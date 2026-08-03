@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 
 type CompanySlug  = { slug: string; updated_at: string }
 type CategorySlug = { slug: string }
+type ServiceCaseRow = { id: string; created_at: string; companies: { slug: string } | null }
 
 // Plain anon client, no cookies, safe inside unstable_cache
 function getSupabase() {
@@ -16,13 +17,16 @@ function getSupabase() {
 const getSitemapData = unstable_cache(
   async () => {
     const supabase = getSupabase()
-    const [{ data: companiesData }, { data: categoriesData }] = await Promise.all([
+    const [{ data: companiesData }, { data: categoriesData }, { data: serviceCasesData }] = await Promise.all([
       supabase.from('companies').select('slug, updated_at').order('updated_at', { ascending: false }),
       supabase.from('categories').select('slug').eq('is_active', true),
+      // Anon client: RLS already limits this to published cases
+      supabase.from('service_cases').select('id, created_at, companies(slug)').order('created_at', { ascending: false }).limit(1000),
     ])
     return {
-      companies:  (companiesData  as unknown as CompanySlug[])  ?? [],
-      categories: (categoriesData as unknown as CategorySlug[]) ?? [],
+      companies:    (companiesData    as unknown as CompanySlug[])     ?? [],
+      categories:   (categoriesData   as unknown as CategorySlug[])    ?? [],
+      serviceCases: (serviceCasesData as unknown as ServiceCaseRow[])  ?? [],
     }
   },
   ['sitemap-data'],
@@ -31,7 +35,7 @@ const getSitemapData = unstable_cache(
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://trustcabbage.com'
-  const { companies, categories } = await getSitemapData()
+  const { companies, categories, serviceCases } = await getSitemapData()
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl,                 lastModified: new Date(), changeFrequency: 'daily',   priority: 1   },
@@ -53,5 +57,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticRoutes, ...companyRoutes, ...categoryRoutes]
+  const serviceCaseRoutes: MetadataRoute.Sitemap = serviceCases
+    .filter(c => c.companies?.slug)
+    .map(c => ({
+      url: `${baseUrl}/company/${c.companies!.slug}/service/${c.id}`,
+      lastModified: new Date(c.created_at),
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }))
+
+  return [...staticRoutes, ...companyRoutes, ...categoryRoutes, ...serviceCaseRoutes]
 }

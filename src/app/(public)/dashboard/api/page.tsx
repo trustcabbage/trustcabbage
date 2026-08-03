@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ApiKeyManager } from './_components/api-key-manager'
-import { ChevronLeft, Terminal, Mail, ShieldCheck, Code2, ArrowRight, ListOrdered } from 'lucide-react'
+import { ChevronLeft, Terminal, Mail, ShieldCheck, Code2, ArrowRight, ListOrdered, HeartHandshake } from 'lucide-react'
 
 export const metadata: Metadata = { title: 'Product Reviews API | Dashboard' }
 
@@ -222,6 +222,91 @@ export default async function ApiDashboardPage() {
                 <code className="font-mono bg-white rounded px-1 py-0.5 break-all">
                   {siteUrl}/company/{'{your-slug}'}/write-review?product={'{your-sku}'}&amp;src=email
                 </code>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Service Desk endpoint */}
+        <div id="service-endpoint" className="bg-white rounded-2xl border border-slate-200 shadow-sm scroll-mt-6">
+          <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-2">
+            <HeartHandshake className="h-4 w-4 text-teal-600" />
+            <h2 className="font-black text-slate-950">Send a Service Desk request</h2>
+            <span className="ml-auto rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-0.5 text-[10px] font-black">
+              Recommended
+            </span>
+          </div>
+          <div className="px-6 py-6 space-y-5">
+            <p className="text-sm text-slate-600 leading-relaxed">
+              The endpoint above asks for a review. This one asks the neutral question:{' '}
+              <em>how was your experience?</em> Happy customers are guided to a review, unhappy ones
+              raise a complaint you get a chance to resolve before it publishes. Trigger it when an
+              order is delivered or a project closes. See your{' '}
+              <Link href="/dashboard/service" className="text-[#6d28d9] font-bold hover:underline">Service Desk</Link>{' '}
+              for everything that comes back.
+            </p>
+
+            <div className="rounded-xl bg-slate-950 px-5 py-4 font-mono text-xs leading-relaxed overflow-x-auto">
+              <p><span className="text-amber-300">POST</span> <span className="text-emerald-300">{siteUrl}/api/service-request</span></p>
+              <p className="text-slate-500 mt-2">{'// Headers'}</p>
+              <p><span className="text-violet-300">Authorization:</span> <span className="text-slate-300">Bearer tc_live_your_key</span></p>
+              <p><span className="text-violet-300">Content-Type:</span> <span className="text-slate-300">application/json</span></p>
+              <p className="text-slate-500 mt-2">{'// Body'}</p>
+              <p className="text-slate-300">{'{'}</p>
+              <p className="pl-3"><span className="text-sky-300">&quot;customer_email&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;priya@example.com&quot;</span><span className="text-slate-400">,</span></p>
+              <p className="pl-3"><span className="text-sky-300">&quot;customer_name&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;Priya Patel&quot;</span><span className="text-slate-400">,</span></p>
+              <p className="pl-3"><span className="text-sky-300">&quot;product_id&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;SKU-1042&quot;</span><span className="text-slate-400">,</span></p>
+              <p className="pl-3"><span className="text-sky-300">&quot;order_id&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;ORD-9234&quot;</span><span className="text-slate-400">,</span></p>
+              <p className="pl-3"><span className="text-sky-300">&quot;purchase_date&quot;</span><span className="text-slate-400">: </span><span className="text-emerald-300">&quot;2026-08-01&quot;</span></p>
+              <p className="text-slate-300">{'}'}</p>
+            </div>
+            <p className="text-xs text-slate-400">Response: <code className="font-mono bg-slate-100 rounded px-1 py-0.5">{'{ "status": "sent" }'}</code></p>
+
+            <div className="rounded-xl border border-slate-200 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-400">Field</th>
+                    <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-400">Required</th>
+                    <th className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-400">Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {[
+                    ['customer_email', 'Yes', 'Where we send the request. Never shown publicly.'],
+                    ['customer_name', 'Recommended', 'Personalises the email. Only the first name is ever shown publicly.'],
+                    ['product_id', 'Optional', 'Your SKU. Scopes the request to one product and registers it on first use, same as the review endpoint.'],
+                    ['product_name', 'First time only', 'Display name used when the product is registered'],
+                    ['order_id', 'Recommended', 'Deduplicates: the same order + email is never requested twice'],
+                    ['purchase_date', 'Optional', 'YYYY-MM-DD, gives your team context on the case'],
+                  ].map(([field, req, notes]) => (
+                    <tr key={field}>
+                      <td className="px-4 py-3 text-xs font-mono font-bold text-slate-700">{field}</td>
+                      <td className="px-4 py-3 text-xs font-bold text-slate-500">{req}</td>
+                      <td className="px-4 py-3 text-xs text-slate-500 leading-relaxed">{notes}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-slate-400 mb-2">Responses</p>
+              <ul className="space-y-1.5 text-xs text-slate-600">
+                <li><code className="font-mono bg-emerald-50 text-emerald-700 rounded px-1.5 py-0.5 font-bold">200</code> <span className="ml-1">{'{ "status": "sent" }'} or {'{ "status": "already_sent" }'} (deduplicated on order + email)</span></li>
+                <li><code className="font-mono bg-rose-50 text-rose-700 rounded px-1.5 py-0.5 font-bold">401</code> <span className="ml-1">Missing or invalid API key</span></li>
+                <li><code className="font-mono bg-rose-50 text-rose-700 rounded px-1.5 py-0.5 font-bold">400</code> <span className="ml-1">Missing or invalid customer_email, or malformed purchase_date</span></li>
+                <li><code className="font-mono bg-amber-50 text-amber-700 rounded px-1.5 py-0.5 font-bold">429</code> <span className="ml-1">Daily cap (500/day) or your plan&apos;s monthly limit reached</span></li>
+              </ul>
+            </div>
+
+            <div className="rounded-xl bg-teal-50 border border-teal-200 px-4 py-3.5">
+              <p className="text-xs font-black text-teal-900 mb-1">What your customer sees</p>
+              <p className="text-xs text-teal-800 leading-relaxed">
+                One neutral email, one question, then the right path for them. Complaints reach you
+                privately first and publish on your company page within 72 hours, resolved or not.
+                Resolve before publication and the case goes public already marked as resolved,
+                which is the best outcome for you. Only the customer can mark a complaint resolved.
               </p>
             </div>
           </div>
