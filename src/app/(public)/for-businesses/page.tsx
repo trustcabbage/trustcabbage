@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { CheckCircle, Search, PenLine, Star, Link2, Mail, Code2, QrCode, ShieldCheck, X, ArrowRight, Zap, BarChart3, MessageSquareDot } from 'lucide-react'
+import { CheckCircle, Search, PenLine, Star, Link2, Mail, Code2, QrCode, ShieldCheck, X, ArrowRight, Zap, BarChart3, MessageSquareDot, HeartHandshake } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'For Businesses | Trust Cabbage',
@@ -406,6 +406,47 @@ export default function ForBusinessesPage() {
                   <p className="pl-3"><span className="text-violet-300">src</span><span className="text-slate-400">=</span><span className="text-emerald-300">&quot;trustcabbage.com/api/widget/product.js&quot;</span></p>
                   <p className="pl-3"><span className="text-violet-300">data-product-id</span><span className="text-slate-400">=</span><span className="text-emerald-300">&quot;SKU-1042&quot;</span></p>
                   <p><span className="text-sky-300">{'></script>'}</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Service Desk promo ── */}
+      <section className="bg-white py-16">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="rounded-3xl bg-gradient-to-br from-[#0f2e2b] via-[#0d3d38] to-[#134e4a] p-8 sm:p-12 relative overflow-hidden">
+            <div className="absolute -top-20 -right-20 w-72 h-72 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full bg-teal-400/15 border border-teal-400/25 text-teal-300 px-3 py-1 text-xs font-black uppercase tracking-widest mb-4">
+                  <HeartHandshake className="h-3 w-3" /> New · Free to start
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-3">
+                  Reviews prove people bought. Service Desk proves you show up after.
+                </h2>
+                <p className="text-teal-200/60 text-sm leading-relaxed mb-6">
+                  Send one neutral request after every order. Complaints publish publicly within 72 hours,
+                  resolved or not. Resolve fast and you earn a badge no one can buy.
+                </p>
+                <Link
+                  href="/for-businesses/service-desk"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white text-teal-800 font-black px-6 py-3 text-sm hover:bg-teal-50 transition-colors"
+                >
+                  Explore Service Desk <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="hidden lg:block">
+                <div className="rounded-2xl bg-white p-5 shadow-2xl">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className="text-[11px] font-black px-2.5 py-1 rounded-full border bg-green-50 text-green-700 border-green-200">Resolved</span>
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">Delivery</span>
+                  </div>
+                  <p className="font-black text-slate-950 text-sm">Order arrived a day late</p>
+                  <div className="mt-3 rounded-xl bg-green-50 border border-green-200 px-3 py-2.5">
+                    <p className="text-xs text-green-800 font-bold">✓ Resolved in 19h, confirmed by customer</p>
+                  </div>
                 </div>
               </div>
             </div>

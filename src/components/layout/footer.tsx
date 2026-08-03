@@ -38,6 +38,7 @@ export function Footer() {
               <li><Link href="/for-businesses/add" className="hover:text-[#a78bfa] transition-colors">Claim your page</Link></li>
               <li><Link href="/for-businesses" className="hover:text-[#a78bfa] transition-colors">For business owners</Link></li>
               <li><Link href="/for-businesses/product-reviews" className="hover:text-[#a78bfa] transition-colors">Product reviews API</Link></li>
+              <li><Link href="/for-businesses/service-desk" className="hover:text-[#a78bfa] transition-colors">Service Desk</Link></li>
               <li><Link href="/for-businesses/integrations" className="hover:text-[#a78bfa] transition-colors">Widget & QR guide</Link></li>
               <li><span className="opacity-50 cursor-not-allowed">Pricing</span></li>
             </ul>
