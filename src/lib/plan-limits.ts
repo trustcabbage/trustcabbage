@@ -13,6 +13,7 @@ export const PLAN_LIMITS = {
     widgetWatermark: true,
     qrCodeDownload: false,
     serviceRequestsPerMonth: 20,
+    teamSeats: 2,
   },
   starter: {
     emailInvitesPerMonth: 100,
@@ -20,6 +21,7 @@ export const PLAN_LIMITS = {
     widgetWatermark: false,
     qrCodeDownload: false,
     serviceRequestsPerMonth: 200,
+    teamSeats: 5,
   },
   growth: {
     emailInvitesPerMonth: Infinity,
@@ -27,6 +29,7 @@ export const PLAN_LIMITS = {
     widgetWatermark: false,
     qrCodeDownload: true,
     serviceRequestsPerMonth: Infinity,
+    teamSeats: Infinity,
   },
 } as const
 
@@ -51,4 +54,10 @@ export function emailInviteLimit(plan: Plan): number {
 export function serviceRequestLimit(plan: Plan): number {
   if (EARLY_ACCESS) return Infinity
   return PLAN_LIMITS[plan].serviceRequestsPerMonth
+}
+
+// Team seats (owner + invited members), Infinity = unlimited.
+export function teamSeatLimit(plan: Plan): number {
+  if (EARLY_ACCESS) return Infinity
+  return PLAN_LIMITS[plan].teamSeats
 }

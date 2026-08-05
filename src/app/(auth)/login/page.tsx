@@ -17,6 +17,8 @@ function getLoginContext(next?: string): { title: string; subtitle: string } {
     return { title: 'Verify to claim your page', subtitle: 'Enter your email to continue claiming your company page.' }
   if (n.startsWith('/dashboard'))
     return { title: 'Sign in to your dashboard', subtitle: 'Enter your email to access your business dashboard.' }
+  if (n.startsWith('/team-invite'))
+    return { title: 'Sign in to accept your invite', subtitle: 'Use the same email address the invite was sent to.' }
   return { title: 'Sign in', subtitle: "We'll send a one-time code to your email." }
 }
 

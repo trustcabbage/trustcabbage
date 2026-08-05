@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { BusinessTypeSettings } from './_components/business-type-settings'
+import { TeamSettings } from './_components/team-settings'
+import { teamSeatLimit, type Plan } from '@/lib/plan-limits'
 
 export const metadata: Metadata = { title: 'Company settings | Trust Cabbage' }
 
@@ -25,12 +27,33 @@ export default async function DashboardSettingsPage() {
 
   const { data: companyData } = await supabase
     .from('companies')
-    .select('id, name, business_type')
+    .select('id, name, business_type, claimed_by, plan')
     .eq('id', companyId)
     .single()
 
-  const company = companyData as { id: string; name: string; business_type: string } | null
+  const company = companyData as { id: string; name: string; business_type: string; claimed_by: string | null; plan: string } | null
   if (!company) redirect('/')
+
+  // Reading teammates' rows here is a cross-user read, and this codebase's
+  // users table RLS policy (set up outside the tracked migrations) is not
+  // guaranteed to allow that for a regular company_admin, the exact class of
+  // silent-empty-result bug already hit twice this session. Authorization is
+  // already verified above, so read via the admin client instead of relying
+  // on RLS to also grant the read.
+  const admin = createAdminClient()
+  const [{ data: membersRaw }, { data: invitesRaw }] = await Promise.all([
+    admin
+      .from('users')
+      .select('id, display_name, email, created_at')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: true }),
+    admin
+      .from('company_team_invites')
+      .select('id, email, created_at')
+      .eq('company_id', companyId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false }),
+  ])
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -53,6 +76,15 @@ export default async function DashboardSettingsPage() {
           currentBusinessType={company.business_type}
           userId={user.id}
         />
+        {company.claimed_by && (
+          <TeamSettings
+            members={(membersRaw ?? []) as any}
+            invites={(invitesRaw ?? []) as any}
+            ownerId={company.claimed_by}
+            currentUserId={user.id}
+            seatLimit={teamSeatLimit((company.plan ?? 'free') as Plan)}
+          />
+        )}
       </div>
     </div>
   )

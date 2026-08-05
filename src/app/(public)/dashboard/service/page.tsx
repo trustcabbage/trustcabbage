@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { RequestForm } from './_components/request-form'
-import { CaseCard, type DashCase, type DashCaseEvent } from './_components/case-card'
-import { ChevronLeft, HeartHandshake, Clock, AlertTriangle, Star } from 'lucide-react'
+import { ServiceInbox, type DashCase, type DashCaseEvent } from './_components/service-inbox'
+import { ChevronLeft, HeartHandshake, AlertTriangle, Star } from 'lucide-react'
 import { ServiceBadge, qualifiesForServiceBadge } from '@/components/service-badge'
 
 export const metadata: Metadata = { title: 'Service Desk | Dashboard' }
@@ -52,13 +52,13 @@ export default async function ServiceDeskPage() {
       .limit(50),
     supabase
       .from('service_cases')
-      .select('id, type, category, satisfaction, title, body, expected_resolution, status, resolution_summary, customer_display, publish_at, created_at, products_services(name)')
+      .select('id, type, category, satisfaction, title, body, expected_resolution, status, resolution_summary, customer_display, publish_at, created_at, first_company_reply_at, resolution_offered_at, resolved_at, products_services(name)')
       .eq('company_id', companyId)
       .order('created_at', { ascending: false })
       .limit(50),
     supabase
       .from('companies')
-      .select('service_complaints_total, service_resolved_total, service_avg_resolution_hours, service_avg_first_reply_hours')
+      .select('slug, service_complaints_total, service_resolved_total, service_avg_resolution_hours, service_avg_first_reply_hours')
       .eq('id', companyId)
       .single(),
     supabase
@@ -92,6 +92,7 @@ export default async function ServiceDeskPage() {
 
   // Performance stats (trigger-maintained on companies, complaints only)
   const coStats = coStatsRaw as any
+  const companySlug = coStats?.slug as string
   const complaintsTotal: number = coStats?.service_complaints_total ?? 0
   const resolvedTotal: number = coStats?.service_resolved_total ?? 0
   const resolutionRate = complaintsTotal > 0 ? Math.round(resolvedTotal / complaintsTotal * 100) : null
@@ -110,21 +111,11 @@ export default async function ServiceDeskPage() {
   const hasBadge = qualifiesForServiceBadge(badgeStats)
 
   const openComplaints = cases.filter(c => c.type === 'complaint' && c.status === 'open')
-  const awaitingCustomer = cases.filter(c => c.type === 'complaint' && c.status === 'resolution_offered')
-  const closedComplaints = cases.filter(c => c.type === 'complaint' && (c.status === 'resolved' || c.status === 'unresolved'))
-  const feedback = cases.filter(c => c.type === 'feedback')
-
-  const sections: { title: string; hint: string; items: DashCase[] }[] = [
-    { title: 'Open complaints', hint: 'Respond fast, these publish on schedule whether or not you act.', items: openComplaints },
-    { title: 'Awaiting customer confirmation', hint: 'You offered a resolution, the customer decides.', items: awaitingCustomer },
-    { title: 'Feedback', hint: 'Quick positive feedback from your customers, already public.', items: feedback },
-    { title: 'Closed complaints', hint: 'Resolved and unresolved cases, part of your public record.', items: closedComplaints },
-  ]
 
   return (
     <div className="min-h-screen bg-slate-50">
       <section className="bg-[#1e1b4b] pt-8 pb-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <Link href="/dashboard" className="inline-flex items-center gap-1 text-xs text-violet-300/70 hover:text-violet-200 transition-colors mb-3">
             <ChevronLeft className="h-3.5 w-3.5" /> Dashboard
           </Link>
@@ -140,7 +131,7 @@ export default async function ServiceDeskPage() {
         </div>
       </section>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         {/* Open complaints alert */}
         {openComplaints.length > 0 && (
@@ -215,24 +206,17 @@ export default async function ServiceDeskPage() {
         </div>
 
         {/* Inbox */}
-        {cases.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
-            <Clock className="h-6 w-6 text-slate-300 mx-auto mb-2" />
-            <p className="text-sm text-slate-500">No responses yet. Send your first requests above.</p>
-          </div>
-        ) : (
-          sections.filter(s => s.items.length > 0).map(section => (
-            <div key={section.title}>
-              <h2 className="text-lg font-black text-slate-950">{section.title} <span className="text-slate-400 font-bold text-sm">({section.items.length})</span></h2>
-              <p className="text-xs text-slate-500 mb-3">{section.hint}</p>
-              <div className="space-y-3">
-                {section.items.map(c => (
-                  <CaseCard key={c.id} kase={c} events={eventsByCase[c.id] ?? []} />
-                ))}
-              </div>
+        <div>
+          <h2 className="text-lg font-black text-slate-950 mb-3">Tickets</h2>
+          {cases.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
+              <HeartHandshake className="h-6 w-6 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">No responses yet. Send your first requests above.</p>
             </div>
-          ))
-        )}
+          ) : (
+            <ServiceInbox cases={cases} eventsByCase={eventsByCase} companySlug={companySlug} />
+          )}
+        </div>
 
         {/* Request log */}
         <div>
