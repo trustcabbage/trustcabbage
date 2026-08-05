@@ -11,17 +11,25 @@ import { NavbarUserSlot } from '@/components/layout/navbar-user-slot'
 // could appear. NavbarUserSlot carries that same lookup but inside its own
 // Suspense boundary, so the shell and the page content stream instantly and
 // only the user's name/avatar pops in a beat later.
+//
+// The outer Suspense is unrelated to that fix and must stay: EmbedAwareChrome
+// calls useSearchParams(), and Next.js requires a Suspense ancestor for that
+// during static generation, or the build fails with "should be wrapped in a
+// suspense boundary" (missing-suspense-with-csr-bailout). It wraps no
+// blocking fetch, so it doesn't reintroduce the slowdown.
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <EmbedAwareChrome
-      navbar={
-        <Suspense fallback={<Navbar user={null} />}>
-          <NavbarUserSlot />
-        </Suspense>
-      }
-      footer={<Footer />}
-    >
-      {children}
-    </EmbedAwareChrome>
+    <Suspense fallback={<><Navbar user={null} /><main className="flex-1">{children}</main><Footer /></>}>
+      <EmbedAwareChrome
+        navbar={
+          <Suspense fallback={<Navbar user={null} />}>
+            <NavbarUserSlot />
+          </Suspense>
+        }
+        footer={<Footer />}
+      >
+        {children}
+      </EmbedAwareChrome>
+    </Suspense>
   )
 }
