@@ -2,40 +2,26 @@ import { Suspense } from 'react'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { EmbedAwareChrome } from '@/components/layout/embed-aware-chrome'
-import { createClient } from '@/lib/supabase/server'
+import { NavbarUserSlot } from '@/components/layout/navbar-user-slot'
 
-export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  let navUser: { email: string; displayName: string | null; role: string | null; companySlug: string | null } | null = null
-
-  if (user) {
-    const { data } = await supabase
-      .from('users')
-      .select('display_name, role, company_id')
-      .eq('id', user.id)
-      .single()
-
-    let companySlug: string | null = null
-    if (data?.company_id) {
-      const { data: co } = await supabase.from('companies').select('slug').eq('id', data.company_id).single()
-      companySlug = (co as any)?.slug ?? null
-    }
-
-    navUser = {
-      email: user.email ?? '',
-      displayName: (data as any)?.display_name ?? user.email?.split('@')[0] ?? null,
-      role: (data as any)?.role ?? null,
-      companySlug,
-    }
-  }
-
+// Deliberately NOT async, and nothing here is awaited. The moment this
+// layout used to await auth.getUser() (plus two more sequential queries)
+// before returning JSX, it blocked every navigation on the site until all
+// three resolved, up to ~2s, before even a page's own loading.tsx skeleton
+// could appear. NavbarUserSlot carries that same lookup but inside its own
+// Suspense boundary, so the shell and the page content stream instantly and
+// only the user's name/avatar pops in a beat later.
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<><Navbar user={navUser} /><main className="flex-1">{children}</main><Footer /></>}>
-      <EmbedAwareChrome navbar={<Navbar user={navUser} />} footer={<Footer />}>
-        {children}
-      </EmbedAwareChrome>
-    </Suspense>
+    <EmbedAwareChrome
+      navbar={
+        <Suspense fallback={<Navbar user={null} />}>
+          <NavbarUserSlot />
+        </Suspense>
+      }
+      footer={<Footer />}
+    >
+      {children}
+    </EmbedAwareChrome>
   )
 }
