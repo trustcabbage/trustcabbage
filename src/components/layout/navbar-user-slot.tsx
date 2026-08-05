@@ -14,11 +14,23 @@ export async function NavbarUserSlot() {
 
   const { data } = await supabase
     .from('users')
-    .select('display_name, role, company_id, companies(slug)')
+    .select('display_name, role, company_id')
     .eq('id', user.id)
     .single()
 
   const profile = data as any
+
+  // Two flat queries, not one embedded select: users and companies have FKs
+  // in both directions (users.company_id -> companies.id AND
+  // companies.claimed_by -> users.id), which makes `companies(slug)` an
+  // ambiguous embed for PostgREST. That silently broke role/company lookups
+  // (and hid the dashboard link for every company admin) the one time this
+  // was combined into a single query, keep it split.
+  let companySlug: string | null = null
+  if (profile?.company_id) {
+    const { data: co } = await supabase.from('companies').select('slug').eq('id', profile.company_id).single()
+    companySlug = (co as any)?.slug ?? null
+  }
 
   return (
     <Navbar
@@ -26,7 +38,7 @@ export async function NavbarUserSlot() {
         email: user.email ?? '',
         displayName: profile?.display_name ?? user.email?.split('@')[0] ?? null,
         role: profile?.role ?? null,
-        companySlug: profile?.companies?.slug ?? null,
+        companySlug,
       }}
     />
   )
