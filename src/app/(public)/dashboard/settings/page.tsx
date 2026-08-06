@@ -41,10 +41,13 @@ export default async function DashboardSettingsPage() {
   // already verified above, so read via the admin client instead of relying
   // on RLS to also grant the read.
   const admin = createAdminClient()
-  const [{ data: membersRaw }, { data: invitesRaw }] = await Promise.all([
+  const [{ data: membershipsRaw }, { data: invitesRaw }] = await Promise.all([
+    // company_members is the source of truth for who's on the team, someone
+    // can be a member here while a different company is their active
+    // dashboard right now, so this must NOT filter on users.company_id.
     admin
-      .from('users')
-      .select('id, display_name, email, created_at')
+      .from('company_members')
+      .select('created_at, users(id, display_name, email)')
       .eq('company_id', companyId)
       .order('created_at', { ascending: true }),
     admin
@@ -54,6 +57,10 @@ export default async function DashboardSettingsPage() {
       .eq('status', 'pending')
       .order('created_at', { ascending: false }),
   ])
+
+  const membersRaw = ((membershipsRaw ?? []) as any[])
+    .filter(m => m.users)
+    .map(m => ({ ...m.users, created_at: m.created_at }))
 
   return (
     <div className="min-h-screen bg-slate-50">

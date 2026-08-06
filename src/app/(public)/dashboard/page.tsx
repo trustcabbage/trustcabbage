@@ -5,6 +5,7 @@ import { StarRating } from '@/components/reviews/star-rating'
 import { VerifiedBadge } from '@/components/verified-badge'
 import { CheckCircle, AlertCircle, ExternalLink, Mail, ArrowRight, Code2, QrCode, Settings, BarChart2, Star, Terminal, MessageCircleQuestion, HeartHandshake } from 'lucide-react'
 import { ShareTools } from './_components/share-tools'
+import { CompanySwitcher, type SwitcherCompany } from './_components/company-switcher'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -21,15 +22,20 @@ export default async function DashboardPage() {
 
   const companyId = (profile as any).company_id
 
-  const [{ data: coRaw }, { data: categoriesRaw }, { data: productsRaw }, { data: recentReviewsRaw }, { data: openComplaintsRaw }] = await Promise.all([
+  const [{ data: coRaw }, { data: categoriesRaw }, { data: productsRaw }, { data: recentReviewsRaw }, { data: openComplaintsRaw }, { data: membershipsRaw }] = await Promise.all([
     supabase.from('companies').select('*').eq('id', companyId).single(),
     supabase.from('company_categories').select('categories(id, name, slug, parent_id)').eq('company_id', companyId),
     supabase.from('products_services').select('id, name, type, is_active').eq('company_id', companyId).eq('is_active', true).order('sort_order'),
     supabase.from('reviews').select('id, rating_overall, what_went_well, created_at, is_anonymous, users(display_name)').eq('company_id', companyId).eq('status', 'published').order('created_at', { ascending: false }).limit(5),
     supabase.from('service_cases').select('id, publish_at').eq('company_id', companyId).eq('type', 'complaint').eq('status', 'open'),
+    // RLS scopes this to the caller's own rows (user_id = auth.uid()), safe
+    // on the regular client. Powers the company switcher, only shown when
+    // this account belongs to more than one company.
+    supabase.from('company_members').select('companies(id, name, slug, logo_url)').eq('user_id', user.id).order('created_at', { ascending: true }),
   ])
 
   const co = coRaw as any
+  const myCompanies: SwitcherCompany[] = ((membershipsRaw ?? []) as any[]).map(m => m.companies).filter(Boolean)
 
   const BUSINESS_TYPE_LABELS: Record<string, string> = {
     business_services: 'Business Services Company',
@@ -101,9 +107,12 @@ export default async function DashboardPage() {
               <p className="text-xs text-slate-400 mt-0.5">{[co.city, co.state].filter(Boolean).join(', ') || 'Location not set'}</p>
             </div>
           </div>
-          <Link href={`/company/${co.slug}`} target="_blank" className="flex items-center gap-1.5 text-xs font-black text-slate-500 hover:text-[#6d28d9] transition-colors">
-            <ExternalLink className="h-3.5 w-3.5" /> View public page
-          </Link>
+          <div className="flex items-center gap-4">
+            {myCompanies.length > 1 && <CompanySwitcher current={companyId} companies={myCompanies} />}
+            <Link href={`/company/${co.slug}`} target="_blank" className="flex items-center gap-1.5 text-xs font-black text-slate-500 hover:text-[#6d28d9] transition-colors">
+              <ExternalLink className="h-3.5 w-3.5" /> View public page
+            </Link>
+          </div>
         </div>
       </div>
 

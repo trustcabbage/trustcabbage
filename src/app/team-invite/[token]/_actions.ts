@@ -29,11 +29,12 @@ export async function acceptTeamInvite(token: string): Promise<AcceptResult> {
     return { ok: false, error: `This invite was sent to ${invite.email}. Sign in with that email instead.` }
   }
 
-  const { data: currentProfile } = await admin.from('users').select('company_id').eq('id', user.id).single()
-  if ((currentProfile as any)?.company_id && (currentProfile as any).company_id !== invite.company_id) {
-    return { ok: false, error: 'Your account already manages a different company. Contact us if you meant to switch.' }
-  }
-
+  // Additive, never a swap: accepting grants access to this company without
+  // touching any other company this account already belongs to. company_id
+  // becomes the active dashboard (accepting takes you there), but their
+  // membership in whatever was active before is untouched and still reachable
+  // via the company switcher.
+  await admin.from('company_members').upsert({ user_id: user.id, company_id: invite.company_id }, { onConflict: 'user_id,company_id' })
   await admin.from('users').update({ role: 'company_admin', company_id: invite.company_id }).eq('id', user.id)
   await admin.from('company_team_invites').update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('id', invite.id)
 

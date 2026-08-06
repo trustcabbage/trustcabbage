@@ -28,37 +28,17 @@ export async function createClient() {
 }
 
 // True service-role client: no cookie binding, so requests always run as the
-// service role. createServiceClient below attaches the visitor's session
-// cookies, which makes Postgres apply RLS as the LOGGED-IN USER even though
-// the service key is the apikey. Use this one whenever you need to bypass RLS
-// regardless of who is browsing (e.g. tokened Service Desk pages).
+// service role regardless of who is browsing. This used to have a sibling,
+// createServiceClient, that looked equivalent but attached the visitor's
+// session cookies anyway, so despite the service key, Postgres still applied
+// RLS as the logged-in caller. That silently dropped writes on tables with
+// narrow RLS policies (no error, zero rows affected) in three different
+// places before the pattern was found and removed for good. Always use this
+// one to bypass RLS, never recreate a cookie-bound "service" client.
 export function createAdminClient() {
   return createBareClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false, autoRefreshToken: false } }
-  )
-}
-
-export async function createServiceClient() {
-  const cookieStore = await cookies()
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {}
-        },
-      },
-    }
   )
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { authenticateApiKey } from '@/lib/api-auth'
 import { buildProductInviteEmail } from '@/lib/email-templates'
 
@@ -14,7 +14,7 @@ function toSlug(name: string) {
 }
 
 async function findUniqueProductSlug(
-  supabase: Awaited<ReturnType<typeof createServiceClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   companyId: string,
   base: string
 ): Promise<string> {

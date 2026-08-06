@@ -50,12 +50,23 @@ export async function inviteTeamMember(_prev: InviteState, formData: FormData): 
 
   const admin = createAdminClient()
 
-  const { data: existingUser } = await admin
-    .from('users').select('id').eq('company_id', companyId).ilike('email', email).maybeSingle()
-  if (existingUser) return { error: 'This person is already on your team.' }
+  // "Already on the team" means a company_members row exists, not that this
+  // company happens to be their currently active dashboard, someone can be a
+  // member here while actively viewing a different company right now.
+  const { data: existingUserByEmail } = await admin
+    .from('users').select('id').ilike('email', email).maybeSingle()
+  if (existingUserByEmail) {
+    const { data: existingMembership } = await admin
+      .from('company_members')
+      .select('id')
+      .eq('user_id', (existingUserByEmail as any).id)
+      .eq('company_id', companyId)
+      .maybeSingle()
+    if (existingMembership) return { error: 'This person is already on your team.' }
+  }
 
   const { count: seatCount } = await admin
-    .from('users').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
+    .from('company_members').select('id', { count: 'exact', head: true }).eq('company_id', companyId)
   const limit = teamSeatLimit((company.plan ?? 'free') as Plan)
   if (isFinite(limit) && (seatCount ?? 0) >= limit) {
     return { error: `Your plan includes ${limit} team seat${limit !== 1 ? 's' : ''}. Upgrade to invite more.` }
@@ -130,11 +141,35 @@ export async function removeTeamMember(memberUserId: string): Promise<SimpleResu
   }
 
   const admin = createAdminClient()
+
   await admin
-    .from('users')
-    .update({ role: 'reviewer', company_id: null })
-    .eq('id', memberUserId)
+    .from('company_members')
+    .delete()
+    .eq('user_id', memberUserId)
     .eq('company_id', owner.companyId)
+
+  // Only touch their active-dashboard pointer if they were actively viewing
+  // THIS company. If they were off viewing a different company of theirs,
+  // leave that alone entirely, removal here shouldn't kick them out of
+  // somewhere else.
+  const { data: memberProfile } = await admin.from('users').select('company_id').eq('id', memberUserId).single()
+  if ((memberProfile as any)?.company_id === owner.companyId) {
+    const { data: otherMembership } = await admin
+      .from('company_members')
+      .select('company_id')
+      .eq('user_id', memberUserId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (otherMembership) {
+      // Still has access elsewhere, switch their active dashboard there
+      // rather than leaving them pointed at a company they just lost.
+      await admin.from('users').update({ company_id: (otherMembership as any).company_id }).eq('id', memberUserId)
+    } else {
+      await admin.from('users').update({ role: 'reviewer', company_id: null }).eq('id', memberUserId)
+    }
+  }
 
   revalidatePath('/dashboard/settings')
   return { ok: true }

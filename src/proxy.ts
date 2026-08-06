@@ -36,7 +36,17 @@ export async function proxy(request: NextRequest) {
   if (ratelimit && request.headers.get('Next-Router-Prefetch') !== '1') {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
     try {
-      const { success, reset } = await ratelimit.limit(ip)
+      // Middleware runs before Next.js can stream anything, including a
+      // page's own loading.tsx, so a slow-but-eventually-successful Redis
+      // call blocks the full round trip on every single navigation site-wide,
+      // not just an occasional request. Bounding it means a degraded or
+      // badly-region-matched Upstash instance costs at most 300ms instead of
+      // multiple seconds. Timing out fails open, same as an outright error,
+      // this is a UX floor, not a protection downgrade in the normal case.
+      const { success, reset } = await Promise.race([
+        ratelimit.limit(ip),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('rate limit timeout')), 300)),
+      ])
       if (!success) {
         return new NextResponse('Too Many Requests', {
           status: 429,
@@ -44,7 +54,7 @@ export async function proxy(request: NextRequest) {
         })
       }
     } catch {
-      // Fail open, Redis unavailable, let request through
+      // Fail open, Redis unavailable or too slow, let request through
     }
   }
 

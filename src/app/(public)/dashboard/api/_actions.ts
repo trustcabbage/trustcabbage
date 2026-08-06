@@ -1,7 +1,7 @@
 'use server'
 
 import { createHash, randomBytes } from 'crypto'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 
 export type GenerateKeyState = { key?: string; error?: string } | undefined
 
@@ -23,7 +23,7 @@ export async function generateApiKey(_prev: GenerateKeyState, _formData: FormDat
   const hash = createHash('sha256').update(key).digest('hex')
   const prefix = key.slice(0, 15)
 
-  const service = await createServiceClient()
+  const service = createAdminClient()
   const { error } = await service
     .from('companies')
     .update({
